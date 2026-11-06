@@ -10,6 +10,51 @@ function num(v: unknown): number {
   return 0;
 }
 
+function splitCsv(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (quoted && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (c === "," && !quoted) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  out.push(cur);
+  return out.map((s) => s.trim());
+}
+
+// CSV trial balance with Acct #, Account name, Debit, Credit headers.
+export function parseTrialBalanceCsv(text: string): Packet["tb"] {
+  const rows = text.split(/\r?\n/).map(splitCsv).filter((r) => r.some((c) => c !== ""));
+  const headerIdx = rows.findIndex(
+    (r) => r.some((c) => /^acct\s*#?$/i.test(c)) && r.some((c) => /^debit$/i.test(c)) && r.some((c) => /^credit$/i.test(c))
+  );
+  if (headerIdx < 0) throw new Error("CSV trial balance headers not found");
+  const head = rows[headerIdx].map((c) => c.toLowerCase());
+  const ci = (re: RegExp) => head.findIndex((c) => re.test(c));
+  const noI = ci(/^acct/), nameI = ci(/account/), dI = ci(/^debit$/), cI = ci(/^credit$/);
+  const tb: Packet["tb"] = [];
+  for (const r of rows.slice(headerIdx + 1)) {
+    const no = Number((r[noI] ?? "").trim());
+    if (!Number.isFinite(no) || (r[nameI] ?? "").trim().toLowerCase() === "total") break;
+    if (!(r[nameI] ?? "").trim()) continue;
+    tb.push({ no, name: (r[nameI] ?? "").trim(), debit: num(r[dI] ?? ""), credit: num(r[cI] ?? "") });
+  }
+  if (tb.length === 0) throw new Error("CSV trial balance has no rows");
+  return tb;
+}
+
 function sheetRows(wb: XLSX.WorkBook, name: string): unknown[][] {
   const ws = wb.Sheets[name];
   if (!ws) throw new Error(`Missing sheet: ${name}`);

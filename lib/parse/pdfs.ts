@@ -81,8 +81,43 @@ export async function parseSupportingPdf(buf: ArrayBuffer): Promise<Pick<Packet,
   return { bank: parseBank(text), invoices: parseInvoices(pages), email: parseEmail(text) };
 }
 
+// Split raw text into pages so each invoice starts its own page: a new page
+// begins at a block whose next three lines hold an invoice marker.
+function splitInvoicePages(text: string): string[] {
+  const lines = text.split("\n");
+  const starts: number[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0 && lines[i - 1].trim() !== "") continue;
+    if (lines[i].trim() === "") continue;
+    if (lines.slice(i, i + 4).some((l) => /Invoice \/ statement:/.test(l))) starts.push(i);
+  }
+  if (starts.length === 0) return [text];
+  const pages: string[] = [];
+  if (starts[0] > 0) pages.push(lines.slice(0, starts[0]).join("\n"));
+  for (let k = 0; k < starts.length; k++) {
+    pages.push(lines.slice(starts[k], k + 1 < starts.length ? starts[k + 1] : undefined).join("\n"));
+  }
+  return pages;
+}
+
+// Same text rules as the PDF path, applied to raw .txt uploads.
+export function parseSupportingText(text: string): Pick<Packet, "bank" | "invoices" | "email"> {
+  const pages = splitInvoicePages(text);
+  return { bank: parseBank(text), invoices: parseInvoices(pages), email: parseEmail(text) };
+}
+
+// Classify raw text the way PDF-extracted text is classified (content only).
+export function classifyText(text: string): "workbook" | "support" | "august" | "unknown" {
+  if (/Trial Balance/i.test(text)) return "workbook";
+  if (/Acct\s*#/i.test(text) && /Debit/i.test(text)) return "workbook";
+  if (/Business Checking Statement|Invoice \/ statement/i.test(text)) return "support";
+  if (/Financial Statements/i.test(text) && /August 31/i.test(text)) return "august";
+  return "unknown";
+}
+
 export function classifyFile(name: string, firstText: string): "workbook" | "support" | "august" | "unknown" {
   if (/\.xlsx?$/i.test(name) || /Trial Balance/i.test(firstText)) return "workbook";
+  if (/\.csv$/i.test(name) && /Acct\s*#/i.test(firstText)) return "workbook";
   if (/Business Checking Statement|Invoice \/ statement/i.test(firstText)) return "support";
   if (/Financial Statements/i.test(firstText) && /August 31/i.test(firstText)) return "august";
   return "unknown";

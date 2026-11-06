@@ -1,5 +1,5 @@
-import { parseWorkbook } from "./workbook";
-import { classifyFile, parseSupportingPdf } from "./pdfs";
+import { parseTrialBalanceCsv, parseWorkbook } from "./workbook";
+import { classifyFile, classifyText, parseSupportingPdf, parseSupportingText } from "./pdfs";
 import { deepseekExtract } from "./fallback";
 import type { Packet } from "../types";
 
@@ -14,6 +14,15 @@ export async function parseUpload(files: { name: string; buf: ArrayBuffer; head?
 
   for (const f of files) {
     let head = f.head ?? f.name;
+    let text: string | null = null;
+    if (/\.txt$/i.test(f.name) || /\.csv$/i.test(f.name)) {
+      try {
+        text = new TextDecoder().decode(f.buf);
+      } catch {
+        text = null;
+      }
+      if (text !== null) head = `${f.name}\n${text.slice(0, 2000)}`;
+    }
     if (/\.pdf$/i.test(f.name) && !f.head) {
       try {
         const { extractText, getDocumentProxy } = await import("unpdf");
@@ -25,9 +34,11 @@ export async function parseUpload(files: { name: string; buf: ArrayBuffer; head?
         // Fall through to name-based classification.
       }
     }
-    const kind = classifyFile(f.name, head);
+    const kind = text !== null ? classifyText(text) : classifyFile(f.name, head);
     try {
-      if (kind === "workbook") Object.assign(partial, parseWorkbook(f.buf));
+      if (kind === "workbook" && text !== null) Object.assign(partial, { tb: parseTrialBalanceCsv(text) });
+      else if (kind === "workbook") Object.assign(partial, parseWorkbook(f.buf));
+      else if (kind === "support" && text !== null) Object.assign(partial, parseSupportingText(text));
       else if (kind === "support") Object.assign(partial, await parseSupportingPdf(f.buf));
       else if (kind === "august") continue; // Prior-period source is hardcoded in lib/reference.
       else errors.push(`${f.name}: not a recognized packet file`);
@@ -44,5 +55,6 @@ export async function parseUpload(files: { name: string; buf: ArrayBuffer; head?
 
   if (!partial.tb) missing.push("workbook");
   if (!partial.bank) missing.push("supporting-documents");
+  if (!partial.payroll) missing.push("schedules");
   return { packet: missing.length ? undefined : (partial as Packet), missing, errors, usedFallback };
 }

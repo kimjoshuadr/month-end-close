@@ -89,6 +89,38 @@ test('R2c image upload errors cleanly', async ({ page }) => {
   await expect(page.getByRole('button', { name: /load sample/i })).toBeVisible();
 });
 
+// S4: oversized files are rejected with 413 before parsing.
+test('S4 oversized file is rejected cleanly', async ({ page }) => {
+  const big = tmp('big.pdf', Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(6 * 1024 * 1024, 0x20)]));
+  await page.goto('/');
+  await page.locator('input[type="file"]').setInputFiles([big]);
+  await expect(page.getByText(/exceeds the 5 MB/i).first()).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole('button', { name: /load sample/i })).toBeVisible();
+});
+
+// S4: an exe renamed to .pdf fails magic bytes with 415.
+test('S4 renamed exe is rejected by magic bytes', async ({ page }) => {
+  const exe = tmp('evil.pdf', Buffer.from([0x4d, 0x5a, 0x90, 0, 3, 0, 0, 0, 1, 2, 3, 4]));
+  await page.goto('/');
+  await page.locator('input[type="file"]').setInputFiles([exe]);
+  await expect(page.getByText(/not a recognized packet file/i).first()).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole('button', { name: /load sample/i })).toBeVisible();
+});
+
+// S4: a zip that is not a workbook and a malformed PDF fail cleanly (4xx/5xx, no crash).
+test('S4 corrupt workbook and malformed PDF fail without crashing', async ({ page }) => {
+  const fake = tmp('fake.xlsx', Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('this is not a workbook')]));
+  await page.goto('/');
+  await page.locator('input[type="file"]').setInputFiles([fake]);
+  await expect(page.locator('.alert.error').first()).toBeVisible({ timeout: 60000 });
+  await expect(page.getByRole('button', { name: /load sample/i })).toBeVisible();
+  const badPdf = tmp('bad.pdf', Buffer.from('%PDF-1.4\n%garbage that is not a document at all (((('));
+  await page.goto('/');
+  await page.locator('input[type="file"]').setInputFiles([badPdf]);
+  await expect(page.locator('.alert.error').first()).toBeVisible({ timeout: 60000 });
+  await expect(page.getByRole('button', { name: /load sample/i })).toBeVisible();
+});
+
 // R3: five tie-outs, all OK, exact values.
 test('R3 validation grid ties out', async ({ page }) => {
   await loadSample(page);

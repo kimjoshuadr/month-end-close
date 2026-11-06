@@ -39,7 +39,10 @@ export default function PacketPage() {
     setInvalid(null);
     setNotice(null);
     const r = await upload(files);
-    if (!r.ok) setNotice(`Packet incomplete. Missing: ${r.missing.join(", ") || "none"}. ${r.errors.join(" ")}`);
+    if (!r.ok) {
+      const missing = r.missing.length > 0 ? ` Missing: ${r.missing.join(", ")}.` : "";
+      setNotice(`Packet incomplete.${missing} ${r.errors.join(" ")}`);
+    }
   };
 
   const browse = (key: string) => {

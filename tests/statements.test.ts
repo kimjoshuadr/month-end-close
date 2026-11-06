@@ -77,4 +77,10 @@ describe("compute answers and overrides", () => {
     const c = compute(await packet(), {}, { "electric:0": 2000 });
     expect(c.balanced).toBe(false);
   });
+  it("compute proposal ajes reflect overrides", async () => {
+    const c = compute(await packet(), {}, { "electric:0": 2000 });
+    const electric = c.proposal.ajes.find((a) => a.id === "electric")!;
+    expect(electric.lines[0].debit).toBe(2000);
+    expect(electric.lines[1].credit).toBe(1250);
+  });
 });

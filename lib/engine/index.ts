@@ -15,5 +15,5 @@ export function compute(packet: Packet, answers: Answers, overrides: Overrides):
   const ajesBalanced = ajes.filter((a) => a.status === "booked").every((a) => Math.abs(a.lines.reduce((s, l) => s + l.debit, 0) - a.lines.reduce((s, l) => s + l.credit, 0)) < 0.005);
   const balanced = ajesBalanced && Math.abs(assetTotal - leTotal) < 0.005;
   const unresolved = proposal.flags.filter((f) => (f.kind === "decision" ? answers[f.id]?.option === undefined : !answers[f.id]?.ack)).length;
-  return { proposal, adjTb, netIncomeUnadj, netIncomeAdj, balanced, statements, unresolved };
+  return { proposal: { ...proposal, ajes }, adjTb, netIncomeUnadj, netIncomeAdj, balanced, statements, unresolved };
 }

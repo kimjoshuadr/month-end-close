@@ -7,28 +7,20 @@ import { fmtMoney } from "./format";
 
 function AmtInput({ ajeId, idx, value }: { ajeId: string; idx: number; value: number }) {
   const { setOverride } = useStore();
-  const [text, setText] = useState<string | null>(null);
-  const shown = text ?? String(value);
-  const commit = () => {
-    if (text === null) return;
-    const n = Number(text.replace(/[$,]/g, ""));
-    if (text.trim() === "" || !Number.isFinite(n) || n < 0) {
-      setText(null); // Reject blank, non-numeric, or negative: revert.
-      return;
-    }
-    setOverride(`${ajeId}:${idx}`, n);
-    setText(null);
+  const commit = (raw: string) => {
+    const n = Number(raw.replace(/[$,]/g, ""));
+    if (raw.trim() === "" || !Number.isFinite(n) || n < 0) return; // Reject blank, non-numeric, or negative: keep current.
+    if (n !== value) setOverride(`${ajeId}:${idx}`, n);
   };
   return (
     <input
       className="amt"
       aria-label={`Amount for entry ${ajeId} line ${idx + 1}`}
-      value={shown}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={commit}
+      key={`${ajeId}:${idx}:${value}`}
+      defaultValue={String(value)}
+      onBlur={(e) => commit(e.currentTarget.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        if (e.key === "Escape") setText(null);
       }}
     />
   );

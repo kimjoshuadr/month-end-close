@@ -1,13 +1,13 @@
 # Close Desk: AI-assisted month-end close (demo)
 
-Reads a month-end packet (workbook + bank statement/invoices/client email PDF), drafts adjusting journal entries with source citations, flags what the documents do not settle, lets the accountant answer or edit, and regenerates draft September 2026 financial statements in the August example format. All client data is fictional. Nothing is sent to anyone.
+ERP-style console (Close Packet, Journal Entries, Open Items, Financial Statements, Audit Trail). Reads a month-end packet (workbook + bank statement/invoices/client email PDF; .xlsx, .pdf, .txt, .csv), drafts adjusting journal entries with source citations, flags what the documents do not settle, lets the accountant answer or edit, and regenerates draft September 2026 financial statements (cover, income statement month and YTD, balance sheet, cash flows, trailing twelve months) in the August example format. All client data is fictional. Nothing is sent to anyone.
 
 ## Run
 
 ```bash
 npm install
 npm run dev          # http://localhost:3000, click "Load sample packet"
-npm test             # engine, parser, store and reply-mapper tests
+npm test             # 65 tests: engine, parser, store, reply mapper, TTM
 ```
 
 Docker / Coolify:
@@ -26,4 +26,4 @@ On Coolify: new resource from this public repo, build pack "Dockerfile", port 30
 - `state/*`: browser-only session state (sessionStorage). No database, nothing stored server-side.
 - DeepSeek is used for: parse fallback, mapping a typed reply to an option, and the Ask AI chat (which can explain but cannot change numbers).
 
-See `docs/SUBMISSION.md` for the write-up and `docs/superpowers/` for the design and plan.
+See `docs/SUBMISSION.md` for the write-up, `docs/DEMO_SCRIPT.md` for the recording script, `docs/screenshots/` and `docs/superpowers/` for the design and plan.

@@ -156,21 +156,31 @@ function Body() {
       </div>
     );
   }
-  const flags = computed.proposal.flags;
-  const done = flags.filter((f) => statusOf(f, answers).done).length;
+  const flags = computed?.proposal.flags ?? [];
+  const done = computed ? flags.filter((f) => statusOf(f, answers).done).length : 0;
   const active = flags.find((f) => f.id === selected) ?? null;
 
   useEffect(() => {
-    if (selected === null && flags.length > 0) {
+    if (computed && selected === null && flags.length > 0) {
       setSelected(flags.find((f) => !statusOf(f, answers).done)?.id ?? flags[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flags.length, selected]);
+  }, [computed, flags.length, selected]);
 
   const advance = (excludeId: string) => {
     const next = flags.find((f) => f.id !== excludeId && !statusOf(f, answers).done);
     if (next) setSelected(next.id);
   };
+
+  if (!computed) {
+    return (
+      <div>
+        <PageHeader crumb="Open Items" title="Open Items" final={final} unresolved={0} />
+        <SummaryStrip computed={null} />
+        <div className="panel"><div className="panel-b muted">Load the packet to see the items that need your judgment.</div></div>
+      </div>
+    );
+  }
   return (
     <div>
       <PageHeader crumb="Open Items" title="Open Items — judgment needed" final={final} unresolved={computed.unresolved} />

@@ -10,7 +10,8 @@ test('R17 @ai answers from the close context', async ({ page }) => {
   await page.getByRole('textbox', { name: /ask ai/i }).fill("Why wasn't Green Valley booked?");
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByText(/green valley/i).nth(1)).toBeVisible({ timeout: 45000 });
-  const first = page.locator('.msg.assistant').first();
+  const first = page.locator('.msg.assistant:not(.typing)').first();
+  await expect(first).toContainText(/green valley/i, { timeout: 45000 });
   const tag = await first.evaluate((el) => el.innerHTML);
   expect(tag).toMatch(/<(strong|li|table)/);
   expect(tag).not.toContain('**');

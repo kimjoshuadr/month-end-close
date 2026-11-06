@@ -339,6 +339,8 @@ table.report tr.headerrow td { font-weight: 700; color: var(--navy); text-transf
   .page { padding: 10px 10px 32px; }
   .hfields { grid-template-columns: 1fr 1fr; }
   input.cell { width: 92px; }
+  .urow { flex-wrap: wrap; }
+  .urow .dropmini { flex: 1 1 100%; }
 }
 
 @media print {

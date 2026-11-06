@@ -2,7 +2,7 @@
 
 import type { BsTable, CfTable, IsTable } from "../lib/types";
 import { fmtWhole } from "./format";
-import { useUI } from "./studio";
+import { useDrill } from "./erp-ui";
 
 type Table = IsTable | BsTable | CfTable;
 
@@ -12,17 +12,17 @@ function cell(v: number, header: string, money: boolean): { text: string; pct: b
   return { text: `$ ${fmtWhole(v)}`, pct: false };
 }
 
-// Paper statement table: every figure is a button that opens its trace.
-export function StatementTable({ tableId, table }: { tableId: "isMonth" | "isYtd" | "bs" | "cf"; table: Table }) {
-  const { openTrace } = useUI();
+// August-format report table; every figure drills down.
+export function ReportTable({ tableId, table }: { tableId: "isMonth" | "isYtd" | "bs" | "cf"; table: Table }) {
+  const { open } = useDrill();
   return (
     <div style={{ overflowX: "auto" }}>
-      <table className="data">
+      <table className="report">
         <thead>
           <tr>
-            <th></th>
+            <th scope="col"><span className="sr">Line</span></th>
             {table.headers.map((h, i) => (
-              <th key={i} className={`num${h.startsWith("%") ? " pctcol" : ""}`}>{h}</th>
+              <th key={i} scope="col" className={`num${h.startsWith("%") ? " pctcol" : ""}`}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -37,12 +37,7 @@ export function StatementTable({ tableId, table }: { tableId: "isMonth" | "isYtd
                   const c = cell(v, table.headers[j], j === 0 && moneyRow);
                   return (
                     <td key={j} className={`num${c.pct ? " pctcol" : ""}`}>
-                      <button
-                        className="cellbtn"
-                        onClick={() => openTrace({ kind: "statement", table: tableId, label: r.label })}
-                        aria-label={`Trace ${r.label}: ${c.text}`}
-                        title="Trace this number"
-                      >
+                      <button className="cellbtn" onClick={() => open({ kind: "statement", table: tableId, label: r.label })} aria-label={`Drill into ${r.label}: ${c.text}`} title="Drill down">
                         {c.text}
                       </button>
                     </td>

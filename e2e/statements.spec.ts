@@ -33,11 +33,11 @@ test('R12 prior-year column equals August Sep-25', async ({ page }) => {
 });
 
 // R13: draft ribbon, reviewer note in audit, final toggle, no outbound calls.
-test('R13 draft, notes, final, and no outbound requests', async ({ page }) => {
+test('R13 draft, notes, final, and no outbound requests', async ({ page, baseURL }) => {
   const external: string[] = [];
   page.on('request', (r) => {
     const url = r.url();
-    if (/^https?:\/\//.test(url) && !/localhost|127\.0\.0\.1/.test(url)) external.push(url);
+    if (/^https?:\/\//.test(url) && new URL(url).origin !== new URL(baseURL!).origin) external.push(url);
   });
   await loadSample(page);
   await page.goto('/statements');

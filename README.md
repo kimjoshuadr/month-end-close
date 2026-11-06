@@ -7,10 +7,11 @@ ERP-style console (Close Packet, Journal Entries, Open Items, Financial Statemen
 ```bash
 npm install
 npm run dev          # http://localhost:3000, click "Load sample packet"
+npm run e2e          # 108 Playwright tests (E2E_BASE_URL=<url> to test a deployment)
 npm test             # 65 tests: engine, parser, store, reply mapper, TTM
 ```
 
-Docker / Coolify:
+Live: https://greenline-close-desk.vercel.app (Vercel). Self-hosting with Docker / Coolify:
 
 ```bash
 docker build -t closedesk .

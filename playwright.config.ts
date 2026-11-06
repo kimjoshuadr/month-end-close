@@ -14,6 +14,8 @@ function loadKey(): string {
 }
 
 const key = loadKey();
+// Set E2E_BASE_URL to test a deployed site instead of a local build.
+const remote = process.env.E2E_BASE_URL;
 if (!key) console.log('[e2e] no DEEPSEEK_API_KEY found; @ai live tests will be skipped');
 
 export default defineConfig({
@@ -22,10 +24,10 @@ export default defineConfig({
   workers: 3,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:3200',
+    baseURL: remote ?? 'http://localhost:3200',
     trace: 'retain-on-failure',
   },
-  webServer: {
+  webServer: remote ? undefined : {
     command: 'npm run build && npx next start -p 3200',
     url: 'http://localhost:3200',
     timeout: 300000,

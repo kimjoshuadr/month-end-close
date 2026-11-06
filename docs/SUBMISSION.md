@@ -1,9 +1,9 @@
 # Submission write-up
 
-Live tool: <COOLIFY_URL> · Recording: <RECORDING_URL> · Code: https://github.com/kimjoshuadr/greenline-close-desk
+Live tool: https://greenline-close-desk.vercel.app · Recording: <RECORDING_URL> · Code: https://github.com/kimjoshuadr/greenline-close-desk
 
 ## 1. What I built and with which tools
-Close Desk is a web tool in the style of an ERP console (Next.js and TypeScript in one Docker container, deployed on Coolify). It has five modules: Close Packet, Journal Entries, Open Items, Financial Statements and Audit Trail. A live summary strip on every page shows unadjusted net income, adjustments, adjusted net income, Dr = Cr, unresolved items and entries booked.
+Close Desk is a web tool in the style of an ERP console (Next.js and TypeScript in one Docker container, deployed on Vercel). It has five modules: Close Packet, Journal Entries, Open Items, Financial Statements and Audit Trail. A live summary strip on every page shows unadjusted net income, adjustments, adjusted net income, Dr = Cr, unresolved items and entries booked.
 
 - **Why this stack:** one container is easy to host privately; TypeScript keeps the accounting engine typed and testable; there is no database because this demo should not store client data.
 - **AI at runtime:** DeepSeek, server-side only, used for three things: a fallback if a document can't be parsed by fixed rules, turning a typed answer into a choice, and an "Ask AI" panel that explains entries. It never produces numbers.

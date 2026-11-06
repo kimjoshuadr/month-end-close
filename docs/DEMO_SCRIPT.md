@@ -1,8 +1,10 @@
 # Walkthrough script: Month-End Close (about 5 minutes)
 
+**Links:** [Live tool](https://month-end-close.vercel.app) · [Code](https://github.com/kimjoshuadr/month-end-close) · [Sample packet files](https://github.com/kimjoshuadr/month-end-close/tree/main/samples) · [Write-up](https://github.com/kimjoshuadr/month-end-close/blob/main/docs/SUBMISSION.md)
+
 **Setup before recording**
 - Open https://month-end-close.vercel.app in Chrome at full width (1440px or wider), zoom 100%.
-- Have the three packet files in a Finder window: `01_Month_End_Workbook_Sep2026.xlsx`, `02_Supporting_Documents_Sep2026.pdf`, `03_Example_Financial_Statements_Aug2026.pdf`.
+- Have the three packet files ([download from the repo](https://github.com/kimjoshuadr/month-end-close/tree/main/samples)) in a Finder window: `01_Month_End_Workbook_Sep2026.xlsx`, `02_Supporting_Documents_Sep2026.pdf`, `03_Example_Financial_Statements_Aug2026.pdf`.
 - If a previous session is loaded, click **Reset session** on the Close Packet tab first.
 - **Bold** = what you click. *Italics* = what you point at. Quoted text = what you say.
 

@@ -1,6 +1,12 @@
 # Submission write-up
 
-Live tool: https://month-end-close.vercel.app · Recording: <RECORDING_URL> · Code: https://github.com/kimjoshuadr/month-end-close
+- **Live tool:** https://month-end-close.vercel.app
+- **Recording:** <RECORDING_URL>
+- **Code:** https://github.com/kimjoshuadr/month-end-close
+- **Walkthrough script:** https://github.com/kimjoshuadr/month-end-close/blob/main/docs/DEMO_SCRIPT.md
+- **QA report:** https://github.com/kimjoshuadr/month-end-close/blob/main/docs/QAQC_REPORT.md
+- **Security review:** https://github.com/kimjoshuadr/month-end-close/blob/main/docs/SECURITY_REVIEW.md
+- **Process docs:** https://github.com/kimjoshuadr/month-end-close/tree/main/docs
 
 ## 1. What I built and with which tools
 Month-End Close is a web tool in the style of an ERP console (Next.js and TypeScript in one Docker container, deployed on Vercel). It has five modules: Close Packet, Journal Entries, Open Items, Financial Statements and Audit Trail. A live summary strip on every page shows unadjusted net income, adjustments, adjusted net income, Dr = Cr, unresolved items and entries booked.

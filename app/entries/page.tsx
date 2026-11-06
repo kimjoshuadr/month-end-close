@@ -26,7 +26,7 @@ function Body() {
       <BridgeTable computed={computed} />
       <div className="panel">
         <div className="panel-h">Checked, no entry needed</div>
-        <div className="gridwrap">
+        <div className="gridwrap" role="region" aria-label="Checked items" tabIndex={0}>
           <table className="grid">
             <thead><tr><th scope="col">Item</th><th scope="col">Reason</th></tr></thead>
             <tbody>

@@ -69,7 +69,6 @@ function Detail({ flag, done, onAdvance }: { flag: Flag; done: number; onAdvance
         } else {
           setAnswer(flag.id, { ...answers[flag.id], option: r.option });
           setPick(null);
-          onAdvance(flag.id);
         }
       }
       if (r.amount !== undefined && flag.id === "owner-transfer") {
@@ -187,7 +186,7 @@ function Body() {
       <SummaryStrip computed={computed} />
       <div className="panel">
         <div className="panel-h">Worklist · {done} of {flags.length} resolved</div>
-        <div className="gridwrap">
+        <div className="gridwrap" role="region" aria-label="Open items worklist" tabIndex={0}>
           <table className="grid">
             <thead>
               <tr><th scope="col">Item</th><th scope="col">Type</th><th scope="col" className="num">At stake</th><th scope="col">Status</th><th scope="col">Default</th></tr>

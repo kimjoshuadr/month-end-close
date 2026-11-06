@@ -48,7 +48,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
           <option value="notbooked">Not booked</option>
         </select>
       </div>
-      <div className="gridwrap">
+      <div className="gridwrap" role="region" aria-label="Journal entries" tabIndex={0}>
         <table className="grid">
           <thead>
             <tr>
@@ -163,7 +163,7 @@ export function BridgeTable({ computed }: { computed: Computed }) {
   return (
     <div className="panel">
       <div className="panel-h">Net income bridge</div>
-      <div className="gridwrap">
+      <div className="gridwrap" role="region" aria-label="Net income bridge" tabIndex={0}>
         <table className="grid">
           <thead><tr><th scope="col">Step</th><th scope="col" className="num">NI effect</th><th scope="col" className="num">Running NI</th></tr></thead>
           <tbody>

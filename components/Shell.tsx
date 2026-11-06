@@ -121,9 +121,9 @@ function Frame({ children }: { children: React.ReactNode }) {
         <GlobalSearch />
         <div className="entity"><strong className="ename">Greenline Landscape Co., LLC</strong><span className="period-tag">Sep 2026</span></div>
         <div className="spacer" />
-        <button className="btn-top accent" onClick={() => setChatOpen(true)}><IconChat size={14} /><span className="lbl">Ask AI</span></button>
+        <button className="btn-top accent" aria-label="Ask AI" onClick={() => setChatOpen(true)}><IconChat size={14} /><span className="lbl">Ask AI</span></button>
       </div>
-      <nav className="modtabs" aria-label="Modules">
+      <nav className="modtabs" aria-label="Modules" tabIndex={0}>
         {TABS.map((t) => (
           <Link key={t.href} href={t.href} className={pathname === t.href ? "active" : ""} aria-current={pathname === t.href ? "page" : undefined}>
             {t.label}

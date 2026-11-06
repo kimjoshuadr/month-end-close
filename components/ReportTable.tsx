@@ -16,7 +16,7 @@ function cell(v: number, header: string, money: boolean): { text: string; pct: b
 export function ReportTable({ tableId, table }: { tableId: "isMonth" | "isYtd" | "bs" | "cf" | "ttm"; table: Table }) {
   const { open } = useDrill();
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div style={{ overflowX: "auto" }} role="region" aria-label="Report table" tabIndex={0}>
       <table className="report">
         <thead>
           <tr>

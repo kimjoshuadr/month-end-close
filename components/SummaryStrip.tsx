@@ -46,14 +46,14 @@ function Cell({ label, value }: { label: string; value: number }) {
 export function SummaryStrip({ computed }: { computed: Computed | null }) {
   if (!computed) {
     return (
-      <div className="strip" aria-label="Close summary">
+      <div className="strip" role="region" aria-label="Close summary" aria-live="polite" tabIndex={0}>
         <div className="kpi"><div className="k">Status</div><div className="v" style={{ fontSize: 13 }}>No packet loaded</div></div>
       </div>
     );
   }
   const booked = computed.proposal.ajes.filter((a) => a.status === "booked").length;
   return (
-    <div className="strip" aria-label="Close summary" aria-live="polite">
+    <div className="strip" role="region" aria-label="Close summary" aria-live="polite" tabIndex={0}>
       <Cell label="Unadjusted NI" value={computed.netIncomeUnadj} />
       <Cell label="Adjustments" value={Math.round((computed.netIncomeAdj - computed.netIncomeUnadj) * 100) / 100} />
       <Cell label="Adjusted NI" value={computed.netIncomeAdj} />

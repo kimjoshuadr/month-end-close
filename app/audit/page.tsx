@@ -28,7 +28,7 @@ export default function AuditPage() {
         {rows.length === 0 ? (
           <div className="panel-b muted">{audit.length === 0 ? "Nothing logged yet. Load a packet to start the trail." : "No events match this filter."}</div>
         ) : (
-          <div className="gridwrap">
+          <div className="gridwrap" role="region" aria-label="Audit events" tabIndex={0}>
             <table className="grid">
               <thead><tr><th scope="col">Time</th><th scope="col">User</th><th scope="col">Action</th><th scope="col">Detail</th></tr></thead>
               <tbody>

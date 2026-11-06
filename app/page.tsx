@@ -69,7 +69,7 @@ export default function PacketPage() {
                 style={{ minWidth: 220 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Drop or browse for ${f.label}`}
+                aria-label={`Drop file or Browse — ${f.label}`}
                 onClick={() => browse(f.key)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") browse(f.key); }}
                 onDragOver={(e) => { e.preventDefault(); setOver(f.key); }}
@@ -90,7 +90,7 @@ export default function PacketPage() {
         <div className="panel-h">Validation and tie-outs</div>
         {!computed && <div className="panel-b muted">Load the sample packet or drop the two files to run validation.</div>}
         {computed && (
-          <div className="gridwrap">
+          <div className="gridwrap" role="region" aria-label="Validation and tie-outs" tabIndex={0}>
             <table className="grid">
               <thead>
                 <tr><th scope="col">Check</th><th scope="col" className="num">Expected</th><th scope="col" className="num">Actual</th><th scope="col" className="num">Difference</th><th scope="col">Status</th></tr>

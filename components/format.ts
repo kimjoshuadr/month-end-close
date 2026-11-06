@@ -22,10 +22,9 @@ export function fmtWhole(n: number): string {
   return r < 0 ? `(${s})` : s;
 }
 
-// Stable ERP-style display numbers; internal ids stay canonical for logic and URLs.
-const AJE_ORDER = ["prepaid", "depreciation", "payroll-accrual", "electric", "owner-transfer", "aug-cutoff", "northline"];
+import { ajeDisplayNo } from "../lib/trace";
 
+// Stable ERP-style display numbers; internal ids stay canonical for logic and URLs.
 export function ajeNo(id: string): string {
-  const i = AJE_ORDER.indexOf(id);
-  return i >= 0 ? `AJE-${String(i + 1).padStart(3, "0")}` : id;
+  return ajeDisplayNo(id);
 }

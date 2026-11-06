@@ -11,6 +11,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "700"],
 export const metadata: Metadata = {
   title: "Greenline Month-End Close",
   description: "Month-end close tool for Greenline Landscape Co., LLC — draft AJEs, open items, and September 2026 statements.",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

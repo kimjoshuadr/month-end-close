@@ -8,6 +8,14 @@ export type TraceKey =
   | { kind: "tie"; label: string };
 
 export type TraceBadge = { text: string; tone: "booked" | "assumed" | "notbooked" | "info" };
+
+// Stable ERP display numbers in proposal build order; ids stay canonical.
+export const AJE_ORDER = ["prepaid", "depreciation", "payroll-accrual", "electric", "owner-transfer", "aug-cutoff", "northline"];
+
+export function ajeDisplayNo(id: string): string {
+  const i = AJE_ORDER.indexOf(id);
+  return i >= 0 ? `AJE-${String(i + 1).padStart(3, "0")}` : id;
+}
 export type TraceResult = {
   title: string;
   badges: TraceBadge[];
@@ -192,7 +200,7 @@ export function traceFor(packet: Packet, computed: Computed, key: TraceKey): Tra
       { label: "Displayed", value: `$${r2money(row.values[0])}` },
       ...ajes.flatMap((a) =>
         a.lines.filter((l) => accts.includes(l.acct)).map((l) => ({
-          label: `${a.title} · ${l.acct} ${acctName(packet, l.acct)}`,
+          label: `${ajeDisplayNo(a.id)} · ${a.title} · ${l.acct} ${acctName(packet, l.acct)}`,
           value: l.debit > 0 ? `Dr $${r2money(l.debit)}` : `Cr $${r2money(l.credit)}`,
         }))
       ),

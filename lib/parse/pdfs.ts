@@ -64,8 +64,10 @@ function parseInvoices(pages: string[]): Invoice[] {
 }
 
 function parseEmail(text: string): Packet["email"] {
-  const from = /From:\s*(.+)/.exec(text)?.[1].trim() ?? "";
-  const date = /Date:\s*(.+)/.exec(text)?.[1].trim() ?? "";
+  const start = text.search(/\nFrom:\s/);
+  const chunk = start >= 0 ? text.slice(start) : text;
+  const from = /From:\s*(.+)/.exec(chunk)?.[1].trim() ?? "";
+  const date = /Date:\s*(.+)/.exec(chunk)?.[1].trim() ?? "";
   const bodyIdx = text.search(/\nHi team,\n/);
   const body = bodyIdx >= 0 ? text.slice(bodyIdx).replace(/\n?Greenline Landscape Co\., LLC\nFictional email.*$/s, "").trim() : "";
   if (!from || !body) throw new Error("Client email not found");

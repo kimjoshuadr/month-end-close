@@ -17,7 +17,8 @@ export async function parseUpload(files: { name: string; buf: ArrayBuffer; head?
     if (/\.pdf$/i.test(f.name) && !f.head) {
       try {
         const { extractText, getDocumentProxy } = await import("unpdf");
-        const pdf = await getDocumentProxy(new Uint8Array(f.buf));
+        const copy = f.buf.slice(0); // Head extraction can detach the buffer; parse from the original.
+        const pdf = await getDocumentProxy(new Uint8Array(copy));
         const { text } = await extractText(pdf, { mergePages: true });
         head = `${f.name}\n${(text as string).slice(0, 2000)}`;
       } catch {

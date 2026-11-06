@@ -46,12 +46,14 @@ export function LedgerCards({ computed }: { computed: Computed }) {
                   <div className="jline" key={i}>
                     <span className="jacct">{l.acct}</span>
                     <span className="jname">{names.get(l.acct) ?? ""}</span>
-                    <span className="jside">
+                    <span className="jcell">
                       {l.debit !== 0 ? (
                         <input className="amt" aria-label={`${a.title} debit`} key={`${key}:${l.debit}`} defaultValue={String(l.debit)} onBlur={(e) => commit(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
                       ) : (
                         <span className="jamt muted">$0.00</span>
                       )}
+                    </span>
+                    <span className="jcell">
                       {l.credit !== 0 ? (
                         <input className="amt" aria-label={`${a.title} credit`} key={`${key}:${l.credit}`} defaultValue={String(l.credit)} onBlur={(e) => commit(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
                       ) : (

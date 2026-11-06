@@ -484,17 +484,18 @@ a.step-link:hover { background: rgba(255, 255, 255, 0.08); }
 .journal { border-top: 1px solid var(--hairline-soft); }
 .jline {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 60px minmax(0, 1fr) 132px 132px;
   gap: 12px;
-  align-items: baseline;
+  align-items: center;
   padding: 9px 0;
   border-bottom: 1px dashed var(--hairline-soft);
 }
 
 .jline:last-child { border-bottom: none; }
 .jacct { font-family: var(--font-mono, monospace); font-weight: 700; color: var(--navy); }
-.jname { color: var(--ink); }
-.jside { display: flex; align-items: center; gap: 8px; }
+.jname { color: var(--ink); min-width: 0; }
+.jcell { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.jside { display: contents; }
 .jamt { font-family: var(--font-mono, monospace); font-size: 14.5px; min-width: 110px; text-align: right; }
 .jtotal { display: flex; justify-content: flex-end; gap: 18px; padding-top: 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: var(--navy); }
 
@@ -556,8 +557,9 @@ input.amt:focus { outline: 2px solid var(--blue); outline-offset: 1px; backgroun
 
 /* Waterfall */
 .waterfall { width: 100%; height: auto; }
-.wf-label { font-family: var(--font-mono, monospace); font-size: 11px; fill: var(--muted); }
+.wf-label { font-family: var(--font-mono, monospace); font-size: 11.5px; fill: var(--muted); }
 .wf-value { font-family: var(--font-heading, Poppins, sans-serif); font-weight: 700; font-size: 13px; fill: var(--navy); }
+.wf-num { text-anchor: end; }
 .wf-bar-neg { fill: var(--orange); }
 .wf-bar-start { fill: var(--navy); }
 .wf-bar-end { fill: var(--blue); }
@@ -907,7 +909,7 @@ td.clickable:focus-visible { outline: 2.5px solid var(--blue); }
   .tophead { align-items: flex-start; }
   .head-actions { width: 100%; }
   table.data th, table.data td { padding: 7px 8px; font-size: 13px; }
-  .jline { grid-template-columns: 52px 1fr auto; gap: 8px; }
+  .jline { grid-template-columns: 50px minmax(0, 1fr) 104px 104px; gap: 8px; }
   input.amt { width: 96px; }
   .q-headline { font-size: 24px; }
   .stephead h2 { font-size: 24px; }

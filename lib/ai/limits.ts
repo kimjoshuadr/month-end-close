@@ -6,7 +6,8 @@ import { createRateLimiter } from "./rateLimit";
 
 type Limiter = ReturnType<typeof createRateLimiter>;
 
-const BYPASS = process.env.E2E_NO_RATE_LIMIT === "1";
+// Never bypass on a Vercel production deployment, even if the env var leaks.
+const BYPASS = process.env.E2E_NO_RATE_LIMIT === "1" && process.env.VERCEL_ENV !== "production";
 const unlimited = (): Limiter => ({ check: () => ({ ok: true, retryAfterSec: 0 }) });
 
 export const chatLimiter: Limiter = BYPASS ? unlimited() : createRateLimiter(10, 60_000);

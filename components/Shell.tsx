@@ -121,7 +121,6 @@ function Frame({ children }: { children: React.ReactNode }) {
         <div className="entity"><strong className="ename">Greenline Landscape Co., LLC</strong><span className="period-tag">Sep 2026</span></div>
         <div className="spacer" />
         <button className="btn-top accent" onClick={() => setChatOpen(true)}><IconChat size={14} /><span className="lbl">Ask AI</span></button>
-        <span className="avatar" title="Accountant">A</span>
       </div>
       <nav className="modtabs" aria-label="Modules">
         {TABS.map((t) => (

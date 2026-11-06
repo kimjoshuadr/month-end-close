@@ -1,38 +1,50 @@
 "use client";
 
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useStore } from "../../state/store";
-import { EmptyStep, LedgerCards } from "../../components/AjeTable";
-import { IconArrowR } from "../../components/icons";
-import { Waterfall } from "../../components/Waterfall";
+import { BridgeTable, JournalGrid } from "../../components/JournalGrid";
+import { PageHeader, SummaryStrip } from "../../components/Shell";
 
-export default function EntriesPage() {
-  const { computed } = useStore();
-  if (!computed) return <EmptyStep title="Entries are locked" body="Load the packet first — the studio drafts every entry from its documents." />;
+function Body() {
+  const { computed, final } = useStore();
+  const sel = useSearchParams().get("sel");
+  if (!computed) {
+    return (
+      <div>
+        <PageHeader crumb="Journal Entries" title="Journal Entries" final={final} unresolved={0} />
+        <SummaryStrip computed={null} />
+        <div className="panel"><div className="panel-b muted">Load the packet to review the drafted entries.</div></div>
+      </div>
+    );
+  }
   return (
     <div>
-      <div className="stephead">
-        <p className="eyebrow">Step 2 of 4 · Entries</p>
-        <h2>Five entries, all sourced</h2>
-        <p>Every line cites its document — click a source chip or a total to trace it. Amounts edit inline; everything recomputes.</p>
-      </div>
+      <PageHeader crumb="Journal Entries" title="Journal Entries — September 2026" final={final} unresolved={computed.unresolved} />
+      <SummaryStrip computed={computed} />
+      <JournalGrid computed={computed} initialSel={sel} />
+      <BridgeTable computed={computed} />
       <div className="panel">
-        <p className="eyebrow">Net income bridge · September</p>
-        <Waterfall computed={computed} />
-      </div>
-      <LedgerCards computed={computed} />
-      <div className="panel">
-        <p className="eyebrow">Checked, no entry needed</p>
-        {computed.proposal.checked.map((c, i) => (
-          <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid var(--hairline-soft)" }}>
-            <strong style={{ color: "var(--navy)" }}>{c.title}</strong>
-            <div className="small muted">{c.reason}</div>
-          </div>
-        ))}
-        <div style={{ marginTop: 14 }}>
-          <Link href="/decisions" className="btn-primary">Continue to decisions <IconArrowR size={16} /></Link>
+        <div className="panel-h">Checked, no entry needed</div>
+        <div className="gridwrap">
+          <table className="grid">
+            <thead><tr><th scope="col">Item</th><th scope="col">Reason</th></tr></thead>
+            <tbody>
+              {computed.proposal.checked.map((c, i) => (
+                <tr key={i}><td><strong style={{ color: "var(--navy)" }}>{c.title}</strong></td><td className="small">{c.reason}</td></tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EntriesPage() {
+  return (
+    <Suspense>
+      <Body />
+    </Suspense>
   );
 }

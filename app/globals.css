@@ -233,6 +233,8 @@ input.cell {
   font-family: var(--font-mono, monospace);
 }
 .edited-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); margin-left: 6px; vertical-align: middle; }
+.linkbtn { background: none; border: none; padding: 0; color: var(--blue-dark); font: inherit; cursor: pointer; text-decoration: underline; text-align: left; }
+.linkbtn:hover { color: var(--navy); }
 .radio-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
 .radio-list label.opt {
   display: flex; gap: 9px; align-items: baseline; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink);

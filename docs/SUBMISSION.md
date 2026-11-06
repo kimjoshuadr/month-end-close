@@ -79,7 +79,7 @@ There's no database on purpose. Client data stays in the browser session and isn
    Prior-year figures and opening balances come from the August package, so September ties: total assets of $231,120 balance, and the cash flow ends at $84,320, the bank balance. Click any figure to see the entries and documents behind it.
 
 6. **Review like a close team would.**
-   - **Flux review:** compares each line with August and with September last year. It flags 6 lines that moved by at least $1,000 and 10% (e.g. Materials +25.8% vs Sep 2025, Repairs −31.8% vs August), and each one needs an explanation.
+   - **Flux review:** compares each line with August and with September last year. It flags 6 lines that moved by at least $1,000 and 10% (e.g. Materials +25.8% and Repairs −44.8% vs September 2025), and each one needs an explanation.
    - **Mark as final:** blocked until every open item is answered and every flux line is explained. It then asks for a preparer and a different reviewer, and their names and times appear on the cover.
    - **Exports:** a journal-entry import CSV (NetSuite/QuickBooks style, with reversal dates) and an Excel copy of the statements.
    - **Nothing is ever sent to the client.**

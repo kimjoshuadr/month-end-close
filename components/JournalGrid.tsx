@@ -103,7 +103,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                       <span className={`chev${isOpen ? " open" : ""}`}><IconChevronR size={13} /></span>
                     </button>
                   </td>
-                  <td className="mono">{ajeNo(a.id)}</td>
+                  <td className="mono" style={{ whiteSpace: "nowrap" }}>{ajeNo(a.id)}</td>
                   <td><strong style={{ color: "var(--navy)" }}>{a.title}</strong></td>
                   <td><span className={`st ${a.status !== "booked" ? "notbooked" : a.assumed ? "assumed" : "booked"}`}>{a.status !== "booked" ? "Not booked" : a.assumed ? "Assumed" : "Booked"}</span>{a.reverseOn && <div className="small" style={{ marginTop: 2 }}><span className="st info">Auto-reverse {fmtReverseDate(a.reverseOn)}</span></div>}</td>
                   <td className="num"><Changed value={dr}>{fmtMoney(dr)}</Changed></td>

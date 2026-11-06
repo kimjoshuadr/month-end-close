@@ -3,7 +3,7 @@ import type { Aje, Overrides, Packet, Statements, TbRow } from "../types";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
-const TB_TO_LINE: Record<number, IsLine> = {
+export const TB_TO_LINE: Record<number, IsLine> = {
   4000: "Landscape Services Revenue", 4100: "Maintenance Contract Revenue",
   6000: "Wages", 5000: "Materials", 5100: "Subcontractors", 6100: "Rent",
   6120: "Fuel", 6110: "Utilities", 6130: "Repairs & Maintenance", 6010: "Payroll Taxes",

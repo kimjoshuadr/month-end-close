@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
+import { IconX } from "./icons";
+import { Drawer } from "./drawers";
 
 const SUGGESTED = ["Why wasn't Green Valley booked?", "Explain the payroll accrual", "What happens if the $5k is revenue?"];
 
-export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+function ChatBody() {
   const { computed } = useStore();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [msgs, setMsgs] = useState<{ role: string; content: string }[]>([]);
@@ -14,14 +16,12 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) fetch("/api/chat").then((r) => r.json()).then((j) => setEnabled(j.enabled)).catch(() => setEnabled(false));
-  }, [open ]);
+    fetch("/api/chat").then((r) => r.json()).then((j) => setEnabled(j.enabled)).catch(() => setEnabled(false));
+  }, []);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
   }, [msgs]);
-
-  if (!open) return null;
 
   const context = computed
     ? {
@@ -42,42 +42,48 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       const j = await res.json();
       setMsgs((m) => [...m, { role: "assistant", content: (j.reply ?? j.message) as string }]);
     } catch {
-      setMsgs((m) => [...m, { role: "assistant", content: "Ask AI is unavailable. The tool works fully with the option buttons." }]);
+      setMsgs((m) => [...m, { role: "assistant", content: "Ask AI is unavailable. The close works fully with the option buttons." }]);
     }
     setBusy(false);
   };
 
   return (
-    <div className="chatdrawer" role="dialog" aria-label="Ask AI assistant">
-      <header>
-        <div>
-          <p className="eyebrow" style={{ margin: 0 }}>Assistant</p>
-          <strong>Ask AI</strong>
-        </div>
-        <span style={{ flex: 1 }} />
-        <button className="btn ghost small" onClick={onClose} aria-label="Close assistant">Close</button>
-      </header>
+    <>
       <div className="chatlog" ref={logRef}>
         {enabled === false && (
-          <div className="alert info">Ask AI is disabled: no <code>DEEPSEEK_API_KEY</code> is configured on the server. It can explain and cite, but never changes numbers. The close still works fully with the buttons.</div>
+          <div className="alert info">Ask AI is disabled: no <code>DEEPSEEK_API_KEY</code> is configured. It explains and cites but never changes numbers — and the close works fully without it.</div>
         )}
-        {msgs.length === 0 && enabled !== false && <p className="muted small">Ask about the entries, open items, or statements. Answers cite the draft numbers; the assistant cannot change them.</p>}
+        {msgs.length === 0 && enabled !== false && <p className="muted small">Ask about the entries, decisions, or statements. Answers cite the draft numbers; the assistant cannot change them.</p>}
         {msgs.map((m, i) => (
           <div key={i} className={`msg ${m.role}`}>{m.content}</div>
         ))}
         {busy && <div className="msg assistant">Thinking…</div>}
       </div>
-      <div style={{ padding: "0 16px" }}>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingBottom: 8 }}>
-          {SUGGESTED.map((s) => (
-            <button key={s} className="optbtn" style={{ fontSize: 12 }} disabled={!enabled || busy} onClick={() => ask(s)}>{s}</button>
-          ))}
-        </div>
+      <div className="chips">
+        {SUGGESTED.map((s) => (
+          <button key={s} className="choice" disabled={!enabled || busy} onClick={() => ask(s)}>{s}</button>
+        ))}
       </div>
       <div className="chatinput">
         <input ref={inputRef} type="text" placeholder={enabled ? "Ask about this close…" : "Disabled without API key"} aria-label="Ask AI" disabled={!enabled} onKeyDown={(e) => { if (e.key === "Enter") ask(e.currentTarget.value); }} />
-        <button className="btn secondary small" disabled={!enabled || busy} onClick={() => ask(inputRef.current?.value ?? "")}>Send</button>
+        <button className="btn-primary small" disabled={!enabled || busy} onClick={() => ask(inputRef.current?.value ?? "")}>Send</button>
       </div>
-    </div>
+    </>
+  );
+}
+
+export function ChatDrawer({ onClose }: { onClose: () => void }) {
+  return (
+    <Drawer label="Ask AI assistant" title="Ask AI" eyebrow="Assistant" onClose={onClose} wide>
+      <ChatBody />
+    </Drawer>
+  );
+}
+
+export function ChatCloseX({ onClose }: { onClose: () => void }) {
+  return (
+    <button className="iconbtn" onClick={onClose} aria-label="Close assistant">
+      <IconX />
+    </button>
   );
 }

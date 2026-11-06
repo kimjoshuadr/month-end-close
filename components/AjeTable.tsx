@@ -1,120 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { buildProposal } from "../lib/engine/proposal";
 import type { Computed } from "../lib/types";
 import { useStore } from "../state/store";
 import { fmtMoney } from "./format";
+import { IconEye } from "./icons";
+import { useUI } from "./studio";
 
-function AmtInput({ ajeId, idx, value }: { ajeId: string; idx: number; value: number }) {
-  const { setOverride } = useStore();
-  const commit = (raw: string) => {
-    const n = Number(raw.replace(/[$,]/g, ""));
-    if (raw.trim() === "" || !Number.isFinite(n) || n < 0) return; // Reject blank, non-numeric, or negative: keep current.
-    if (n !== value) setOverride(`${ajeId}:${idx}`, n);
-  };
-  return (
-    <input
-      className="amt"
-      aria-label={`Amount for entry ${ajeId} line ${idx + 1}`}
-      key={`${ajeId}:${idx}:${value}`}
-      defaultValue={String(value)}
-      onBlur={(e) => commit(e.currentTarget.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-      }}
-    />
-  );
-}
-
-export function AjeTable({ computed }: { computed: Computed }) {
+// Journal-style ledger cards with source chips, inline editing, and trace.
+export function LedgerCards({ computed }: { computed: Computed }) {
+  const { packet, answers, overrides, setOverride } = useStore();
+  const { openTrace } = useUI();
+  const base = useMemo(() => (packet ? buildProposal(packet, answers) : null), [packet, answers]);
   const names = new Map(computed.adjTb.map((r) => [r.no, r.name]));
+
   return (
     <div>
       {computed.proposal.ajes.map((a) => {
         const dr = a.lines.reduce((s, l) => s + l.debit, 0);
         const cr = a.lines.reduce((s, l) => s + l.credit, 0);
         const ok = Math.abs(dr - cr) < 0.005;
+        const edited = a.lines.some((_, i) => `${a.id}:${i}` in overrides);
         return (
-          <div className="card" key={a.id}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
-              <h3 style={{ margin: 0 }}>{a.title}</h3>
+          <article className={`ledger${a.assumed ? " assumed" : ""}${a.status !== "booked" ? " excluded" : ""}`} key={a.id}>
+            <div className="ledger-head">
+              <h3>{a.title}</h3>
               <span className={`badge ${a.status === "booked" ? "booked" : "notbooked"}`}>{a.status === "booked" ? "Booked" : "Not booked"}</span>
-              {a.assumed && <span className="badge assumed">Assumed, unconfirmed</span>}
-              <span style={{ flex: 1 }} />
+              {a.assumed && <span className="badge assumed">Assumed</span>}
+              {edited && <span className="edited-flag">Edited</span>}
+              <span className="spacer" />
               <span className={`badge ${ok ? "ok" : "bad"}`}>{ok ? "Dr = Cr" : "Unbalanced"}</span>
             </div>
-            <div className="tablewrap">
-              <table className="data">
-                <thead>
-                  <tr>
-                    <th>Acct</th>
-                    <th>Account</th>
-                    <th className="num">Debit</th>
-                    <th className="num">Credit</th>
-                    <th>Source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {a.lines.map((l, i) => (
-                    <tr key={i}>
-                      <td className="num">{l.acct}</td>
-                      <td>{names.get(l.acct) ?? ""}</td>
-                      <td className="num">{l.debit !== 0 || l.credit === 0 ? <AmtInput ajeId={a.id} idx={i} value={l.debit} /> : fmtMoney(0)}</td>
-                      <td className="num">{l.credit !== 0 || l.debit === 0 ? <AmtInput ajeId={a.id} idx={i} value={l.credit} /> : fmtMoney(0)}</td>
-                      <td className="src">{l.source}</td>
-                    </tr>
-                  ))}
-                  <tr className="subtotal">
-                    <td colSpan={2}>Total</td>
-                    <td className="num">{fmtMoney(dr)}</td>
-                    <td className="num">{fmtMoney(cr)}</td>
-                    <td />
-                  </tr>
-                </tbody>
-              </table>
+            <div className="journal">
+              {a.lines.map((l, i) => {
+                const key = `${a.id}:${i}`;
+                const baseLine = base?.ajes.find((b) => b.id === a.id)?.lines[i];
+                const isEdited = key in overrides;
+                const commit = (raw: string) => {
+                  const n = Number(raw.replace(/[$,]/g, ""));
+                  if (raw.trim() === "" || !Number.isFinite(n) || n < 0) return;
+                  if (n !== (l.debit !== 0 ? l.debit : l.credit)) setOverride(key, n);
+                };
+                return (
+                  <div className="jline" key={i}>
+                    <span className="jacct">{l.acct}</span>
+                    <span className="jname">{names.get(l.acct) ?? ""}</span>
+                    <span className="jside">
+                      {l.debit !== 0 ? (
+                        <input className="amt" aria-label={`${a.title} debit`} key={`${key}:${l.debit}`} defaultValue={String(l.debit)} onBlur={(e) => commit(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+                      ) : (
+                        <span className="jamt muted">$0.00</span>
+                      )}
+                      {l.credit !== 0 ? (
+                        <input className="amt" aria-label={`${a.title} credit`} key={`${key}:${l.credit}`} defaultValue={String(l.credit)} onBlur={(e) => commit(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+                      ) : (
+                        <span className="jamt muted">$0.00</span>
+                      )}
+                      {isEdited && baseLine && (
+                        <button className="linkbtn" onClick={() => setOverride(key, baseLine.debit !== 0 ? baseLine.debit : baseLine.credit)}>Reset</button>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="jtotal">
+                <button className="linkbtn" onClick={() => openTrace({ kind: "entry", ajeId: a.id })}>
+                  <span className="num">Dr ${fmtMoney(dr)} · Cr ${fmtMoney(cr)}</span> — trace
+                </button>
+              </div>
             </div>
-          </div>
+            <div className="srcchips">
+              {a.lines.length > 0 && (
+                <button className="srcchip" onClick={() => openTrace({ kind: "entry", ajeId: a.id })}>
+                  <IconEye size={13} /> {a.lines[0].source.length > 52 ? a.lines[0].source.slice(0, 51) + "…" : a.lines[0].source}
+                </button>
+              )}
+            </div>
+          </article>
         );
       })}
     </div>
   );
 }
 
-export function NetIncomeBridge({ computed }: { computed: Computed }) {
-  const adj = computed.netIncomeAdj - computed.netIncomeUnadj;
+export function EmptyStep({ title, body }: { title: string; body: string }) {
   return (
-    <div className="stat-cards">
-      <div className="stat">
-        <div className="k">Unadjusted net income</div>
-        <div className="v">${fmtMoney(computed.netIncomeUnadj)}</div>
-      </div>
-      <div className="stat accent">
-        <div className="k">Adjustments</div>
-        <div className="v">{adj < 0 ? "-" : "+"}${fmtMoney(Math.abs(adj))}</div>
-      </div>
-      <div className="stat">
-        <div className="k">Adjusted net income</div>
-        <div className="v">${fmtMoney(computed.netIncomeAdj)}</div>
-      </div>
-      <div className="stat">
-        <div className="k">Balance check</div>
-        <div className="v" style={{ fontSize: 16 }}>{computed.balanced ? "Dr = Cr" : "Out of balance"}</div>
-      </div>
+    <div className="panel" style={{ textAlign: "center", padding: 40 }}>
+      <p className="eyebrow">Locked</p>
+      <h2>{title}</h2>
+      <p className="muted">{body}</p>
     </div>
   );
 }
 
-export function EmptyState({ title, body }: { title: string; body: string }) {
-  const { loadSample } = useStore();
-  const [busy, setBusy] = useState(false);
-  return (
-    <div className="card" style={{ textAlign: "center", padding: 40 }}>
-      <p className="eyebrow">No data</p>
-      <h2>{title}</h2>
-      <p className="muted">{body}</p>
-      <button className="btn primary" disabled={busy} onClick={async () => { setBusy(true); await loadSample(); setBusy(false); }}>
-        {busy ? "Loading..." : "Load sample packet"}
-      </button>
-    </div>
-  );
-}
+export const EmptyState = EmptyStep;

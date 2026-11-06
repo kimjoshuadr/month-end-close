@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { firstRowForAccount } from "../lib/trace";
 import { useStore } from "../state/store";
 import { ajeNo } from "./format";
@@ -10,6 +10,8 @@ import { ChatDrawer } from "./ChatDrawer";
 import { DrillDown } from "./DrillDown";
 import { DrillProvider } from "./erp-ui";
 import { IconChat, IconSearch } from "./icons";
+import { ShortcutManager } from "./Shortcuts";
+import { ToastProvider } from "./Toasts";
 import { SummaryStrip } from "./SummaryStrip";
 
 const TABS = [
@@ -67,11 +69,12 @@ function GlobalSearch() {
     <div className="gsearch" ref={boxRef}>
       <IconSearch size={14} />
       <input
+        id="global-search"
         type="text"
         role="combobox"
         aria-expanded={open && hits.length > 0}
         aria-label="Global search entries, flags, accounts"
-        placeholder="Search entries, flags, accounts…"
+        placeholder="Search entries, flags, accounts…  ( / )"
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
@@ -112,7 +115,35 @@ function Frame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { computed } = useStore();
   const [chatOpen, setChatOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const inkRef = useRef<HTMLSpanElement>(null);
   const unresolved = computed?.unresolved ?? 0;
+  // Sliding tab underline follows the active module tab.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const ink = inkRef.current;
+    if (!nav || !ink) return;
+    const active = nav.querySelector<HTMLElement>("a.active");
+    if (!active) {
+      ink.style.opacity = "0";
+      return;
+    }
+    ink.style.opacity = "1";
+    ink.style.transform = `translateX(${active.offsetLeft}px)`;
+    ink.style.width = `${active.offsetWidth}px`;
+  });
+  useEffect(() => {
+    const fn = () => {
+      const nav = navRef.current;
+      const ink = inkRef.current;
+      const active = nav?.querySelector<HTMLElement>("a.active");
+      if (!nav || !ink || !active) return;
+      ink.style.transform = `translateX(${active.offsetLeft}px)`;
+      ink.style.width = `${active.offsetWidth}px`;
+    };
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
   return (
     <div>
       <header className="topnav">
@@ -123,18 +154,20 @@ function Frame({ children }: { children: React.ReactNode }) {
         <div className="spacer" />
         <button className="btn-top accent" aria-label="Ask AI" onClick={() => setChatOpen(true)}><IconChat size={14} /><span className="lbl">Ask AI</span></button>
       </div>
-      <nav className="modtabs" aria-label="Modules" tabIndex={0}>
+      <nav className="modtabs" aria-label="Modules" tabIndex={0} ref={navRef}>
         {TABS.map((t) => (
           <Link key={t.href} href={t.href} className={pathname === t.href ? "active" : ""} aria-current={pathname === t.href ? "page" : undefined}>
             {t.label}
             {t.badge && computed && unresolved > 0 && <span className="countbadge">{unresolved}</span>}
           </Link>
         ))}
+        <span className="tab-ink" ref={inkRef} aria-hidden="true" />
       </nav>
       </header>
       <main className="page">{children}</main>
       <DrillDown />
       {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}
+      <ShortcutManager />
     </div>
   );
 }
@@ -142,7 +175,9 @@ function Frame({ children }: { children: React.ReactNode }) {
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <DrillProvider>
-      <Frame>{children}</Frame>
+      <ToastProvider>
+        <Frame>{children}</Frame>
+      </ToastProvider>
     </DrillProvider>
   );
 }

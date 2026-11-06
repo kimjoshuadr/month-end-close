@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 import { compute } from "../lib/engine";
 import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
-import { SESSION_KEY, createInitial, deserializeState, reducer, serializeState, type AuditEntry } from "./reducer";
+import { SESSION_KEY, createInitial, deserializeState, reducer, selectCanUndo, serializeState, type AuditEntry } from "./reducer";
 import { ajeNo } from "../components/format";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
@@ -26,6 +26,8 @@ type Store = {
   setNote: (report: string, text: string, label: string) => void;
   toggleFinal: () => void;
   resetSession: () => void;
+  undo: () => void;
+  canUndo: boolean;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -90,6 +92,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "reset" });
   }, []);
 
+  const undo = useCallback(() => dispatch({ type: "undo" }), []);
+
   // Rehydrate after mount only: server and first client render stay empty,
   // so there is no hydration mismatch.
   useEffect(() => {
@@ -113,8 +117,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(() => {
     const computed: Computed | null = s.packet ? compute(s.packet, s.answers, s.overrides) : null;
-    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession };
-  }, [s, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession]);
+    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession, undo, canUndo: selectCanUndo(s) };
+  }, [s, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession, undo]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

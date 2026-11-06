@@ -15,6 +15,7 @@ export type Aje = { id: string; title: string; status: 'booked' | 'not_booked'; 
 export type FlagOption = { id: string; label: string };
 export type Flag = { id: string; title: string; evidence: string; kind: 'decision' | 'info'; options: FlagOption[]; defaultOption: string };
 export type Answer = { option?: string; amount?: number; ack?: boolean };
+export type Signoff = { preparedBy: string; reviewedBy: string; at: string };
 export type Answers = Record<string, Answer>;
 export type Overrides = Record<string, number>;
 export type Checked = { title: string; reason: string };

@@ -3,7 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 import { compute } from "../lib/engine";
 import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
-import { SESSION_KEY, createInitial, deserializeState, reducer, selectCanUndo, serializeState, type AuditEntry, type Signoff } from "./reducer";
+import { SESSION_KEY, createInitial, deserializeState, reducer, selectCanUndo, serializeState, type AuditEntry } from "./reducer";
+import type { Signoff } from "../lib/types";
 import { ajeNo } from "../components/format";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };

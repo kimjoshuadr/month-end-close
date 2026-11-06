@@ -4,7 +4,7 @@ import Link from "next/link";
 import { traceFor, type TraceKey } from "../lib/trace";
 import { useStore } from "../state/store";
 import { useDrill } from "./erp-ui";
-import { ajeNo } from "./format";
+import { ajeNo, fmtReverseDate } from "./format";
 import { Dialog } from "./Dialog";
 
 // Drill-down side panel: entries and sources behind any figure.
@@ -14,6 +14,7 @@ export function DrillDown() {
   if (!key) return null;
   const t = packet && computed ? traceFor(packet, computed, key as TraceKey) : null;
   const entryId = key.kind === "entry" || key.kind === "aje-line" ? key.ajeId : undefined;
+  const entry = entryId ? computed?.proposal.ajes.find((a) => a.id === entryId) : undefined;
   const title = t && entryId ? `${ajeNo(entryId)} · ${t.title}` : (t?.title ?? "Detail");
   const flagId = key.kind === "entry" || key.kind === "aje-line"
     ? computed?.proposal.ajes.find((a) => a.id === key.ajeId)?.flagId
@@ -29,6 +30,7 @@ export function DrillDown() {
             {t.badges.map((b, i) => (
               <span key={i} className={`st ${b.tone === "notbooked" ? "notbooked" : b.tone}`}>{b.text}</span>
             ))}
+            {entry?.reverseOn && <span className="st info">Auto-reverse {fmtReverseDate(entry.reverseOn)}</span>}
           </div>
           <p>{t.rule}</p>
           <p className="eyebrow">Lines</p>

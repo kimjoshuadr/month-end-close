@@ -5,7 +5,7 @@ import { compute } from "../lib/engine";
 import { buildProposal } from "../lib/engine/proposal";
 import type { Computed } from "../lib/types";
 import { useStore } from "../state/store";
-import { ajeNo, fmtDelta, fmtMoney } from "./format";
+import { ajeNo, fmtDelta, fmtMoney, fmtReverseDate } from "./format";
 import { useDrill } from "./erp-ui";
 import { useToasts } from "./Toasts";
 import { Changed } from "./useChanged";
@@ -105,7 +105,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                   </td>
                   <td className="mono">{ajeNo(a.id)}</td>
                   <td><strong style={{ color: "var(--navy)" }}>{a.title}</strong></td>
-                  <td><span className={`st ${a.status !== "booked" ? "notbooked" : a.assumed ? "assumed" : "booked"}`}>{a.status !== "booked" ? "Not booked" : a.assumed ? "Assumed" : "Booked"}</span></td>
+                  <td><span className={`st ${a.status !== "booked" ? "notbooked" : a.assumed ? "assumed" : "booked"}`}>{a.status !== "booked" ? "Not booked" : a.assumed ? "Assumed" : "Booked"}</span>{a.reverseOn && <div className="small" style={{ marginTop: 2 }}><span className="st info">Auto-reverse {fmtReverseDate(a.reverseOn)}</span></div>}</td>
                   <td className="num"><Changed value={dr}>{fmtMoney(dr)}</Changed></td>
                   <td className="num"><Changed value={cr}>{fmtMoney(cr)}</Changed></td>
                   <td className="small muted">{a.lines[0] ? (a.lines[0].source.length > 40 ? a.lines[0].source.slice(0, 39) + "…" : a.lines[0].source) : "—"}</td>
@@ -121,7 +121,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                               <div className="hf"><div className="k">Entry #</div><div className="v mono">{ajeNo(a.id)}</div></div>
                               <div className="hf"><div className="k">Date</div><div className="v">9/30/2026</div></div>
                               <div className="hf"><div className="k">Memo</div><div className="v">{a.title}</div></div>
-                              <div className="hf"><div className="k">Status</div><div className="v">{a.status === "booked" ? (a.assumed ? "Booked · assumed" : "Booked") : "Not booked"}</div></div>
+                              <div className="hf"><div className="k">Status</div><div className="v">{a.status === "booked" ? (a.assumed ? "Booked · assumed" : "Booked") : "Not booked"}{a.reverseOn ? ` · Auto-reverse ${fmtReverseDate(a.reverseOn)}` : ""}</div></div>
                             </div>
                             <table className="grid">
                               <thead>

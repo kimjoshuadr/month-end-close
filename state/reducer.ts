@@ -1,5 +1,5 @@
 import { compute } from "../lib/engine";
-import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
+import type { Answer, Answers, Computed, Overrides, Packet, Signoff } from "../lib/types";
 
 export type AuditEntry = { ts: string; msg: string };
 
@@ -13,8 +13,6 @@ export type Snapshot = {
   signoff: Signoff | null;
   final: boolean;
 };
-
-export type Signoff = { preparedBy: string; reviewedBy: string; at: string };
 
 export const HISTORY_LIMIT = 20;
 

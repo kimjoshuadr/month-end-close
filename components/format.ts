@@ -31,6 +31,12 @@ export function deltaWords(n: number): string {
   return "unchanged";
 }
 
+// ISO 2026-10-01 -> 10/01/2026 for the auto-reverse badge.
+export function fmtReverseDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return y && m && d ? `${m}/${d}/${y}` : iso;
+}
+
 // Whole dollars for statements, August-PDF style: no cents, parentheses negatives.
 export function fmtWhole(n: number): string {
   const r = Math.round(n);

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { useStore } from "../state/store";
+import { ChatDrawer } from "./ChatDrawer";
 import { TopBar } from "./TopBar";
 
 const NAV = [
@@ -16,14 +18,15 @@ const NAV = [
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { computed } = useStore();
+  const [askOpen, setAskOpen] = useState(false);
   return (
     <div className="shell">
       <nav className="sidenav" aria-label="Primary">
         <div className="brand">
-          <img src="/notion-logo.png" alt="Notion CFO and Advisors" width={170} height={40} />
-          <p className="eyebrow" style={{ color: "#9fb3cc", marginTop: 8 }}>
-            Greenline Close
+          <p className="eyebrow" style={{ color: "#9fb3cc", margin: 0 }}>
+            Month-end close
           </p>
+          <p className="wordmark">Close Desk</p>
         </div>
         {NAV.map((n) => (
           <Link key={n.href} href={n.href} className={`navlink${pathname === n.href ? " active" : ""}`}>
@@ -31,6 +34,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {n.badge && computed && computed.unresolved > 0 && <span className="navbadge">{computed.unresolved}</span>}
           </Link>
         ))}
+        <span style={{ flex: 1 }} />
+        <button className="navlink" style={{ width: "100%", background: "var(--blue)", color: "#fff", border: "none", cursor: "pointer", font: "inherit" }} onClick={() => setAskOpen(true)}>
+          <span>Ask AI</span>
+        </button>
       </nav>
       <div className="main">
         <div className="topbar">
@@ -38,6 +45,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="content">{children}</main>
       </div>
+      <ChatDrawer open={askOpen} onClose={() => setAskOpen(false)} />
     </div>
   );
 }

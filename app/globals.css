@@ -96,13 +96,16 @@ a {
   height: 100vh;
 }
 
-.sidenav .brand img {
-  display: block;
-  max-width: 170px;
-  height: auto;
-  background: #fff;
-  border-radius: 6px;
-  padding: 6px 8px;
+.sidenav .brand {
+  padding: 4px 12px 10px;
+}
+
+.sidenav .wordmark {
+  font-family: var(--font-heading, Poppins, Inter, sans-serif);
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  margin: 2px 0 0;
 }
 
 .navlink {

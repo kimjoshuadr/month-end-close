@@ -171,7 +171,7 @@ function Body() {
                   <tr key={f.id} className={`clickable${selected === f.id ? " selected" : ""}`} onClick={() => setSelected(f.id)} onKeyDown={(e) => { if (e.key === "Enter") setSelected(f.id); }} tabIndex={0}>
                     <td><strong style={{ color: "var(--navy)" }}>{f.title}</strong></td>
                     <td>{f.kind === "info" ? "Info" : "Decision"}</td>
-                    <td className="num">{stake === null ? "—" : `$${stake.toLocaleString()}`}</td>
+                    <td className="num">{stake === null ? "—" : `$${stake.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
                     <td><span className={`st ${st.cls}`}>{st.text}</span></td>
                     <td className="small muted">{def}</td>
                   </tr>

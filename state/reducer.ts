@@ -21,7 +21,9 @@ export type StoreAction =
   | { type: "log"; msg: string }
   | { type: "toggle-final" }
   | { type: "set-loading"; loading: boolean }
-  | { type: "set-upload"; missing: string[]; errors: string[] };
+  | { type: "set-upload"; missing: string[]; errors: string[] }
+  | { type: "rehydrate"; state: StoreState }
+  | { type: "reset" };
 
 export function createInitial(): StoreState {
   return { packet: null, answers: {}, overrides: {}, audit: [], final: false, loading: false, missing: [], errors: [] };
@@ -50,6 +52,10 @@ export function reducer(s: StoreState, a: StoreAction): StoreState {
       return { ...s, loading: a.loading };
     case "set-upload":
       return { ...s, missing: a.missing, errors: a.errors, loading: false };
+    case "rehydrate":
+      return { ...a.state, loading: false, missing: [], errors: [] };
+    case "reset":
+      return createInitial();
     default:
       return s;
   }
@@ -57,4 +63,40 @@ export function reducer(s: StoreState, a: StoreAction): StoreState {
 
 export function selectComputed(s: StoreState): Computed | null {
   return s.packet ? compute(s.packet, s.answers, s.overrides) : null;
+}
+
+export const SESSION_KEY = "closedesk.session.v1";
+
+// Persisted subset: everything needed to rebuild the close. Packet is plain JSON.
+export function serializeState(s: StoreState): string {
+  return JSON.stringify({ packet: s.packet, answers: s.answers, overrides: s.overrides, audit: s.audit, final: s.final });
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === "object" && !Array.isArray(v);
+}
+
+// Validate a stored session; null when missing, corrupt, or wrong-shaped.
+export function deserializeState(raw: string | null | undefined): StoreState | null {
+  if (!raw) return null;
+  try {
+    const o: unknown = JSON.parse(raw);
+    if (!isRecord(o) || !isRecord(o.packet)) return null;
+    const p = o.packet as Record<string, unknown>;
+    if (!Array.isArray(p.tb) || !isRecord(p.bank) || !Array.isArray((p.bank as Record<string, unknown>).lines)) return null;
+    if (!Array.isArray(p.invoices) || !isRecord(p.email)) return null;
+    const answers: Answers = isRecord(o.answers) ? (o.answers as Answers) : {};
+    const overrides: Overrides = {};
+    if (isRecord(o.overrides)) {
+      for (const [k, v] of Object.entries(o.overrides)) {
+        if (typeof v === "number" && Number.isFinite(v)) overrides[k] = v;
+      }
+    }
+    const audit: AuditEntry[] = Array.isArray(o.audit)
+      ? o.audit.filter((e): e is AuditEntry => isRecord(e) && typeof e.ts === "string" && typeof e.msg === "string")
+      : [];
+    return { packet: o.packet as Packet, answers, overrides, audit, final: o.final === true, loading: false, missing: [], errors: [] };
+  } catch {
+    return null;
+  }
 }

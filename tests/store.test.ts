@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
 import { parseWorkbook } from "../lib/parse/workbook";
 import { parseSupportingPdf } from "../lib/parse/pdfs";
-import { createInitial, reducer, selectComputed } from "../state/reducer";
+import { createInitial, deserializeState, reducer, selectComputed, serializeState } from "../state/reducer";
 import type { Packet } from "../lib/types";
 
 async function packet(): Promise<Packet> {
@@ -36,5 +36,36 @@ describe("store reducer", () => {
     let s = reducer(createInitial(), { type: "packet-loaded", packet: await packet(), msg: "loaded" });
     s = reducer(s, { type: "override", key: "electric:0", value: NaN, msg: "nan" });
     expect(Number.isFinite(selectComputed(s)?.netIncomeAdj)).toBe(true);
+  });
+  it("serializes and restores the full session", async () => {
+    let s = reducer(createInitial(), { type: "packet-loaded", packet: await packet(), msg: "loaded" });
+    s = reducer(s, { type: "answer", id: "owner-transfer", answer: { option: "loan" }, msg: "loan" });
+    s = reducer(s, { type: "override", key: "electric:0", value: 2000, msg: "edit" });
+    s = reducer(s, { type: "toggle-final" });
+    const restored = deserializeState(serializeState(s));
+    expect(restored).not.toBeNull();
+    expect(restored!.answers).toEqual(s.answers);
+    expect(restored!.overrides).toEqual(s.overrides);
+    expect(restored!.final).toBe(true);
+    expect(restored!.audit).toEqual(s.audit);
+    expect(selectComputed(restored!)?.netIncomeAdj).toBe(selectComputed(s)?.netIncomeAdj);
+    expect(selectComputed(restored!)?.balanced).toBe(selectComputed(s)?.balanced);
+  });
+  it("rejects corrupt or wrong-shape sessions", () => {
+    expect(deserializeState(null)).toBeNull();
+    expect(deserializeState("{{{not json")).toBeNull();
+    expect(deserializeState(JSON.stringify({ packet: { tb: [] } }))).toBeNull();
+    expect(deserializeState(JSON.stringify({ hello: "world" }))).toBeNull();
+  });
+  it("rehydrate restores state and reset clears it", async () => {
+    let s = reducer(createInitial(), { type: "packet-loaded", packet: await packet(), msg: "loaded" });
+    s = reducer(s, { type: "answer", id: "owner-transfer", answer: { option: "loan" }, msg: "loan" });
+    const restored = deserializeState(serializeState(s));
+    const rehydrated = reducer(createInitial(), { type: "rehydrate", state: restored! });
+    expect(selectComputed(rehydrated)?.netIncomeAdj).toBe(selectComputed(s)?.netIncomeAdj);
+    expect(rehydrated.answers).toEqual({ "owner-transfer": { option: "loan" } });
+    const cleared = reducer(rehydrated, { type: "reset" });
+    expect(cleared).toEqual(createInitial());
+    expect(selectComputed(cleared)).toBeNull();
   });
 });

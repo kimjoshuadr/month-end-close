@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useReducer } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 import { compute } from "../lib/engine";
 import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
-import { createInitial, reducer, type AuditEntry } from "./reducer";
+import { SESSION_KEY, createInitial, deserializeState, reducer, serializeState, type AuditEntry } from "./reducer";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
 
@@ -22,6 +22,7 @@ type Store = {
   setAnswer: (id: string, a: Answer) => void;
   setOverride: (key: string, n: number) => void;
   toggleFinal: () => void;
+  resetSession: () => void;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -71,10 +72,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const toggleFinal = useCallback(() => dispatch({ type: "toggle-final" }), []);
 
+  const resetSession = useCallback(() => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      // Storage unavailable; still reset in-memory state.
+    }
+    dispatch({ type: "reset" });
+  }, []);
+
+  // Rehydrate after mount only: server and first client render stay empty,
+  // so there is no hydration mismatch.
+  useEffect(() => {
+    try {
+      const restored = deserializeState(sessionStorage.getItem(SESSION_KEY));
+      if (restored) dispatch({ type: "rehydrate", state: restored });
+    } catch {
+      // Corrupt or unavailable storage: start fresh.
+    }
+  }, []);
+
+  // Persist every change while a packet is loaded.
+  useEffect(() => {
+    if (!s.packet) return;
+    try {
+      sessionStorage.setItem(SESSION_KEY, serializeState(s));
+    } catch {
+      // Quota or private mode: session simply won't survive reload.
+    }
+  }, [s]);
+
   const value = useMemo<Store>(() => {
     const computed: Computed | null = s.packet ? compute(s.packet, s.answers, s.overrides) : null;
-    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, toggleFinal };
-  }, [s, loadSample, upload, setAnswer, setOverride, toggleFinal]);
+    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, toggleFinal, resetSession };
+  }, [s, loadSample, upload, setAnswer, setOverride, toggleFinal, resetSession]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

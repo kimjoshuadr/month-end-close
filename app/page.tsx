@@ -9,7 +9,7 @@ const EXPECTED = [
 ];
 
 export default function UploadPage() {
-  const { computed, loading, missing, errors, loadSample, upload } = useStore();
+  const { computed, loading, missing, errors, audit, loadSample, upload, resetSession } = useStore();
   const [over, setOver] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +32,16 @@ export default function UploadPage() {
           {loading ? "Loading sample packet..." : "Load sample packet"}
         </button>
         <p className="small muted" style={{ marginBottom: 0 }}>Loads the Greenline September 2026 workbook and supporting documents from the server.</p>
+        {(computed || audit.length > 0) && (
+          <div style={{ marginTop: 10 }}>
+            <button
+              className="btn ghost small"
+              onClick={() => { if (window.confirm("Reset this session? The packet, answers, edits, and audit log will be cleared.")) { resetSession(); setNotice(null); } }}
+            >
+              Reset session
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="card">

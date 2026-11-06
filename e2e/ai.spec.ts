@@ -7,7 +7,7 @@ test('R17 @ai answers from the close context', async ({ page }) => {
   await loadSample(page);
   await page.goto('/entries');
   await page.getByRole('button', { name: /ask ai/i }).click();
-  await page.getByRole('textbox', { name: /ask ai/i }).fill("Why wasn't Green Valley booked?");
+  await page.getByRole('textbox', { name: /ask ai/i }).fill("Why wasn't Green Valley booked? List the reasons as bullets.");
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByText(/green valley/i).nth(1)).toBeVisible({ timeout: 45000 });
   const first = page.locator('.msg.assistant:not(.typing)').first();

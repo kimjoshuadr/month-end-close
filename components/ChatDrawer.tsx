@@ -65,7 +65,7 @@ export function ChatDrawer({ onClose }: { onClose: () => void }) {
       });
       const j = (await res.json()) as { reply?: string; message?: string };
       window.clearTimeout(timer);
-      if (!res.ok) throw new Error(`error ${res.status}`);
+      if (!res.ok) throw new Error(j.message || `error ${res.status}`);
       const reply = (j.reply ?? "").trim();
       setMsgs((m) => [...m, { role: "assistant", content: reply ? j.reply! : NO_ANSWER }]);
     } catch (e) {

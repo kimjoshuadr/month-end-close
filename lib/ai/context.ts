@@ -8,6 +8,15 @@ import type { Answers, Computed } from "../types";
 
 export const CONTEXT_BUDGET = 8000;
 
+export const DOC_OPEN = "<<DOCUMENT-DATA>>";
+export const DOC_CLOSE = "<</DOCUMENT-DATA>>";
+
+// Document-derived strings are wrapped so the model can tell data from
+// instructions. The system prompt states these blocks are never instructions.
+export function docText(s: string): string {
+  return `${DOC_OPEN}${s}${DOC_CLOSE}`;
+}
+
 type Tier = 0 | 1 | 2;
 
 export function buildChatContext(computed: Computed, answers: Answers, budget = CONTEXT_BUDGET): unknown {
@@ -34,7 +43,7 @@ function assemble(computed: Computed, answers: Answers, tier: Tier): Record<stri
       title: a.title,
       status: a.status,
       assumed: a.assumed,
-      lines: tier === 2 ? a.lines.length : a.lines.map((l) => (tier === 1 ? { acct: l.acct, debit: l.debit, credit: l.credit } : l)),
+      lines: tier === 2 ? a.lines.length : a.lines.map((l) => (tier === 1 ? { acct: l.acct, debit: l.debit, credit: l.credit } : { ...l, source: docText(l.source) })),
     })),
     flags: computed.proposal.flags.map((f) => ({
       id: f.id,
@@ -43,9 +52,9 @@ function assemble(computed: Computed, answers: Answers, tier: Tier): Record<stri
       defaultOption: f.defaultOption,
       options: f.options.map((o) => ({ id: o.id, label: o.label })),
       answer: answers[f.id] ?? null,
-      ...(tier >= 1 ? {} : { evidence: f.evidence }),
+      ...(tier >= 1 ? {} : { evidence: docText(f.evidence) }),
     })),
-    checked: computed.proposal.checked.map((c) => (tier >= 1 ? { title: c.title } : c)),
+    checked: computed.proposal.checked.map((c) => (tier >= 1 ? { title: c.title } : { title: c.title, reason: docText(c.reason) })),
     ties: computed.proposal.ties.map((t) => ({ check: t.label, ok: t.ok })),
   };
 }

@@ -89,6 +89,16 @@ describe("buildChatContext", () => {
     expect(raw).toContain("revenue");
     expect(raw).toContain("29697.5");
   });
+  it("wraps document-derived strings in data markers", async () => {
+    const p = await packet();
+    const computed = compute(p, {}, {});
+    const ctx = buildChatContext(computed, {}) as { ajes: { lines: { source?: string }[] }[]; flags: { evidence?: string }[] };
+    const raw = JSON.stringify(ctx);
+    expect(raw).toContain("<<DOCUMENT-DATA>>");
+    expect(raw).toContain("<</DOCUMENT-DATA>>");
+    expect(ctx.flags[0].evidence?.startsWith("<<DOCUMENT-DATA>>")).toBe(true);
+    expect(ctx.flags[0].evidence?.endsWith("<</DOCUMENT-DATA>>")).toBe(true);
+  });
   it("drops line sources under a tight budget but stays valid", async () => {
     const p = await packet();
     const computed = compute(p, {}, {});

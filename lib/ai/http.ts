@@ -10,3 +10,9 @@ export async function readJsonBody(req: { json(): Promise<unknown> }): Promise<
     return { ok: false, status: 400, message: "Request body must be valid JSON." };
   }
 }
+
+// Opaque id attached to every API error response and server log line so a
+// failure can be traced without leaking stacks or upstream bodies.
+export function newRequestId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}

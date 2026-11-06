@@ -32,6 +32,10 @@ Date: 2026-11-06. Suite: `npx playwright test` (Chromium via system Chrome, prod
 
 Total: 108/108. Nothing still failing.
 
+## 2026-11-06: interactions refinement + AI formatting + security + enterprise close
+
+R13 change (orchestrator-approved): "Mark as final" now opens a Prepared/Reviewed sign-off dialog instead of the legacy two-click confirm. Finalizing is blocked while open items or unexplained flux lines remain, and requires two different typed names. R13 keeps every original assertion (Draft ribbon, reviewer note in audit, Final status, same-origin requests) and adds the steps the dialog now needs: resolve/acknowledge all 7 items, explain flagged flux lines, sign as Dana Whitfield / Kim Okafor, plus a Cover-page names assertion. New coverage: C1 (blocked dialog shows reasons, same-name rejected, Esc closes), C2 (JE CSV: 12 lines, balanced, 10/01/2026 reversals), C3 (xlsx sheets), C4 (sign-off → cover names → audit → reopen clears), I1–I5 (toasts/undo, keyboard, hover preview, Esc, help, all-resolved), A1–A10 (AI markdown/XSS/empty/502-retry/typing/counters), RT1–RT9 (prompt-injection + jailbreak red team), S4 (upload guards), S6 (security headers). Live-model assertions are tolerant by design (refusals paraphrase); rerun the red-team file after any prompt/model change.
+
 ## Bugs found by the suite and fixed
 
 1. Missing favicon → console 404 on every route (R1). Added `public/favicon.svg` + metadata icon.

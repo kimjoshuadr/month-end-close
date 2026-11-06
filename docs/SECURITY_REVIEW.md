@@ -9,6 +9,7 @@ Date: 2026-11-06. Method: TDD unit tests + Playwright (stubbed, live @ai, red-te
 - Result: 10 req/min chat, 20/min reply, 10/min parse per IP; 429 JSON `{message, requestId}` with a `Retry-After` header. Client surfaces the server message ("Too many requests. Try again in Ns.") in the existing error bubble. `max_tokens` 600 (chat) / 100 (reply), `temperature` 0.2 on all DeepSeek calls.
 - Fix: `lib/ai/rateLimit.ts`, `lib/ai/limits.ts`, wired in all three routes.
 - Residual risk: limits are **in-memory per serverless instance** — a distributed flood still gets `limit × instances`. Upgrade path noted in code: Vercel WAF / KV-backed counting. No per-user identity exists to do better.
+- Test methodology: the Playwright web server sets `E2E_NO_RATE_LIMIT=1`, which replaces the limiters with pass-throughs for the suite only — the whole suite uploads from one IP and would otherwise 429 itself (reproduced: 11th rapid `/api/parse` → 429). Production never sets the variable; `tests/rate-limit.test.ts` covers the limiter logic and the env gate.
 
 ## 2. Prompt injection via documents
 

@@ -32,7 +32,7 @@ export default defineConfig({
     url: 'http://localhost:3200',
     timeout: 300000,
     reuseExistingServer: false,
-    env: { ...process.env, ...(key ? { DEEPSEEK_API_KEY: key } : {}) } as Record<string, string>,
+    env: { ...process.env, E2E_NO_RATE_LIMIT: '1', ...(key ? { DEEPSEEK_API_KEY: key } : {}) } as Record<string, string>,
   },
   projects: [
     { name: 'desktop', use: { browserName: 'chromium', channel: 'chrome', viewport: { width: 1440, height: 900 } } },

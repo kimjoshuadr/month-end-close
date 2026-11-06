@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { clientIp, createRateLimiter } from "../lib/ai/rateLimit";
 
 describe("createRateLimiter", () => {
@@ -21,6 +21,20 @@ describe("createRateLimiter", () => {
     expect(rl.check("b").ok).toBe(true);
     t += 60_001;
     expect(rl.check("a").ok).toBe(true);
+  });
+});
+
+describe("limiter bypass", () => {
+  it("is env-gated and off by default", async () => {
+    vi.resetModules();
+    delete process.env.E2E_NO_RATE_LIMIT;
+    const on = await import("../lib/ai/limits");
+    expect(on.chatLimiter.check("x")).toEqual({ ok: true, retryAfterSec: 0 });
+    vi.resetModules();
+    process.env.E2E_NO_RATE_LIMIT = "1";
+    const off = await import("../lib/ai/limits");
+    for (let i = 0; i < 50; i++) expect(off.chatLimiter.check("x").ok).toBe(true);
+    delete process.env.E2E_NO_RATE_LIMIT;
   });
 });
 

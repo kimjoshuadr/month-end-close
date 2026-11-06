@@ -2,12 +2,15 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { buildJeCsv } from "../../lib/export/journalCsv";
 import { useStore } from "../../state/store";
 import { BridgeTable, JournalGrid } from "../../components/JournalGrid";
 import { PageHeader, SummaryStrip } from "../../components/Shell";
+import { useToasts } from "../../components/Toasts";
 
 function Body() {
   const { computed, final } = useStore();
+  const { push } = useToasts();
   const sel = useSearchParams().get("sel");
   if (!computed) {
     return (
@@ -18,9 +21,27 @@ function Body() {
       </div>
     );
   }
+  const exportCsv = () => {
+    const names = new Map(computed.adjTb.map((r) => [r.no, r.name]));
+    const blob = new Blob([buildJeCsv(computed, names)], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "month-end-close-JE-2026-09.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    push("JE import CSV downloaded", {});
+  };
   return (
     <div>
-      <PageHeader crumb="Journal Entries" title="Journal Entries — September 2026" final={final} unresolved={computed.unresolved} />
+      <PageHeader
+        crumb="Journal Entries"
+        title="Journal Entries — September 2026"
+        final={final}
+        unresolved={computed.unresolved}
+        toolbar={<button className="btn small" onClick={exportCsv}>Export JE import (CSV)</button>}
+      />
       <SummaryStrip computed={computed} />
       <JournalGrid computed={computed} initialSel={sel} />
       <BridgeTable computed={computed} />

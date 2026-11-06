@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { compute } from "../../lib/engine";
+import { fluxReview } from "../../lib/engine/flux";
+import { septFigures } from "../../lib/engine/statements";
+import { buildCloseWorkbook } from "../../lib/export/statementsXlsx";
+import { signoffBlockers } from "../../lib/signoff";
 import { firstRowForAccount } from "../../lib/trace";
 import { useStore } from "../../state/store";
+import { FluxReview, unexplainedCount } from "../../components/FluxReview";
+import { SignoffDialog } from "../../components/SignoffDialog";
 import { ReportTable } from "../../components/ReportTable";import { PageHeader, SummaryStrip } from "../../components/Shell";
 import { fmtMoney } from "../../components/format";
 import { useDrill } from "../../components/erp-ui";
@@ -18,12 +25,13 @@ const TABS = [
   { id: "bs", label: "Balance Sheet" },
   { id: "cf", label: "Cash Flows" },
   { id: "ttm", label: "Trailing Twelve Months" },
+  { id: "flux", label: "Flux Review" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
-type ReportId = Exclude<TabId, "cover">;
+type ReportId = Exclude<TabId, "cover" | "flux">;
 
-const PERIODS: Record<Exclude<TabId, "cover">, { title: string; period: string }> = {
+const PERIODS: Record<ReportId, { title: string; period: string }> = {
   isMonth: { title: "Income Statement", period: "For the Month Ended September 30, 2026" },
   isYtd: { title: "Income Statement", period: "For the Nine Months Ended September 30, 2026" },
   bs: { title: "Balance Sheet", period: "As of September 30, 2026" },
@@ -58,12 +66,22 @@ function NotesBox({ tab, label }: { tab: string; label: string }) {
 }
 
 function Body() {
-  const { computed, packet, answers, overrides, final, toggleFinal } = useStore();
+  const { computed, packet, answers, overrides, fluxNotes, signoff, final, reopen } = useStore();
   const { push } = useToasts();
   const { open } = useDrill();
   const acct = useSearchParams().get("acct");
   const [tab, setTab] = useState<TabId>("cover");
-  const [confirming, setConfirming] = useState(false);
+  const [signing, setSigning] = useState(false);
+
+  const flux = useMemo(() => (computed ? fluxReview(septFigures(computed.adjTb)) : []), [computed]);
+  const unexplained = useMemo(() => unexplainedCount(flux, fluxNotes), [flux, fluxNotes]);
+
+  const exportExcel = () => {
+    if (!computed) return;
+    const wb = buildCloseWorkbook(computed, flux, fluxNotes, signoff);
+    XLSX.writeFile(wb, "month-end-close-2026-09.xlsx");
+    push("Excel workbook downloaded", {});
+  };
 
   useEffect(() => {
     if (acct && computed) {
@@ -110,23 +128,26 @@ function Body() {
         toolbar={
           <>
             <button className="btn small" onClick={() => window.print()}>Print / PDF</button>
+            <button className="btn small" onClick={exportExcel}>Export to Excel</button>
             {final ? (
-              <button className="btn small" onClick={() => { toggleFinal(); push("Reopened as draft", { undo: true }); }}>Reopen</button>
-            ) : confirming ? (
-              <>
-                <button className="btn primary small" onClick={() => { toggleFinal(); setConfirming(false); push("Marked as final", { undo: true }); }}>Confirm final</button>
-                <button className="btn small" onClick={() => setConfirming(false)}>Cancel</button>
-              </>
+              <button className="btn small" onClick={() => { reopen(); push("Reopened as draft; sign-off cleared", { undo: true }); }}>Reopen</button>
             ) : (
-              <button className="btn small" onClick={() => setConfirming(true)}>Mark as final</button>
+              <button className="btn small" onClick={() => setSigning(true)}>Mark as final</button>
             )}
           </>
         }
       />
+      {signing && !final && (
+        <SignoffDialog unresolved={computed.unresolved} unexplained={unexplained} onClose={() => setSigning(false)} />
+      )}
       <p className="small muted" style={{ margin: "0 0 12px" }}>Statements are derived from the entries so they always tie; edit amounts in <Link href="/entries">Journal Entries</Link>.</p>
       <SummaryStrip computed={computed} />
-      {!final && computed.unresolved > 0 && (
-        <div className="alert warn">DRAFT — {computed.unresolved} unresolved items. Alternative answers swing net income by up to ${fmtMoney(swing)}. <Link href="/open-items">Resolve in the worklist</Link>.</div>
+      {!final && (computed.unresolved > 0 || unexplained > 0) && (
+        <div className="alert warn">
+          DRAFT — {computed.unresolved > 0 && <>{computed.unresolved} unresolved items. </>}
+          {unexplained > 0 && <>{unexplained} unexplained flux lines. </>}
+          Alternative answers swing net income by up to ${fmtMoney(swing)}. <Link href="/open-items">Resolve in the worklist</Link>.
+        </div>
       )}
       <div className="panel">
         <div className="panel-h" style={{ gap: 4 }}>
@@ -138,7 +159,7 @@ function Body() {
               onClick={() => setTab(t.id)}
               style={tab === t.id ? undefined : { border: "none" }}
             >
-              {t.label}
+              {t.id === "flux" && unexplained > 0 ? `Flux Review (${unexplained})` : t.label}
             </button>
           ))}
         </div>
@@ -149,10 +170,28 @@ function Body() {
               <p className="eyebrow" style={{ color: "var(--muted)" }}>Greenline Landscape Co., LLC</p>
               <h2>Financial Statements</h2>
               <p className="muted">September 30, 2026</p>
+              {signoff && (
+                <p className="small" style={{ marginTop: 12 }}>
+                  Prepared by {signoff.preparedBy} · Reviewed by {signoff.reviewedBy}<br />
+                  <span className="muted">Signed {new Date(signoff.at).toLocaleString()}. Names are typed, not authenticated (no login in this demo).</span>
+                </p>
+              )}
               <p className="footnote small muted" style={{ fontStyle: "italic", marginTop: 32 }}>
                 Fictional example created for a hiring exercise.
               </p>
             </div>
+          ) : tab === "flux" ? (
+            <>
+              <div className="paper-head">
+                <p className="eyebrow" style={{ color: "var(--muted)" }}>Greenline Landscape Co., LLC</p>
+                <h2>Flux Review</h2>
+                <p className="muted small">September 2026 adjusted vs August 2026 and September 2025 · flagged when |change| ≥ $1,000 and |%| ≥ 10%</p>
+              </div>
+              <FluxReview lines={flux} />
+              <p className="footnote small muted" style={{ fontStyle: "italic", marginTop: 12 }}>
+                Fictional example created for a hiring exercise. Explanations are saved to the session and the audit trail.
+              </p>
+            </>
           ) : (
             <>
               <div className="paper-head">

@@ -32,8 +32,10 @@ test('R12 prior-year column equals August Sep-25', async ({ page }) => {
   await expect(page.locator('.paper').getByRole('button', { name: /56,312/ }).first()).toBeVisible();
 });
 
-// R13: draft ribbon, reviewer note in audit, final toggle, no outbound calls.
-test('R13 draft, notes, final, and no outbound requests', async ({ page, baseURL }) => {
+// R13: draft ribbon, reviewer note in audit, sign-off dialog, final, no outbound calls.
+// Finalizing now requires the sign-off dialog: resolve/acknowledge every
+// open item, explain flagged flux lines, and sign with two names.
+test('R13 draft, notes, sign-off, final, and no outbound requests', async ({ page, baseURL }) => {
   const external: string[] = [];
   page.on('request', (r) => {
     const url = r.url();
@@ -47,10 +49,33 @@ test('R13 draft, notes, final, and no outbound requests', async ({ page, baseURL
   await expect(page.getByText('Reviewer checked NI tie-out.')).toBeVisible();
   await page.goto('/audit');
   await expect(page.getByText(/Reviewer note saved/).first()).toBeVisible();
+  // Clear every blocker the sign-off dialog enforces.
+  await page.goto('/open-items');
+  for (let i = 0; i < 7; i++) {
+    if ((await page.getByText('All items resolved').first().count()) > 0) break;
+    const save = page.getByRole('button', { name: 'Save answer' });
+    const hasSave = (await save.count()) > 0;
+    await page.getByRole('radio').first().click({ timeout: 10000 });
+    if (hasSave) await save.click();
+    await expect(page.getByText(`${i + 1} of 7 resolved`).first()).toBeVisible({ timeout: 15000 });
+  }
+  await page.goto('/statements');
+  await page.getByRole('button', { name: /flux review/i }).click();
+  const boxes = page.locator('textarea[aria-label^="Flux explanation"]');
+  for (let i = 0; i < (await boxes.count()); i++) {
+    await boxes.nth(i).fill('Reviewed — within tolerance.');
+    await boxes.nth(i).press('Tab');
+  }
+  await expect(page.getByRole('button', { name: 'Flux Review', exact: true })).toBeVisible({ timeout: 15000 });
   await page.goto('/statements');
   await page.getByRole('button', { name: 'Mark as final' }).click();
-  await page.getByRole('button', { name: 'Confirm final' }).click();
+  const dialog = page.getByRole('dialog', { name: /mark as final/i });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('Prepared by').fill('Dana Whitfield');
+  await dialog.getByLabel('Reviewed by').fill('Kim Okafor');
+  await dialog.getByRole('button', { name: 'Confirm final' }).click();
   await expect(page.getByText('Final', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/Prepared by Dana Whitfield/).first()).toBeVisible();
   expect(external).toEqual([]);
 });
 

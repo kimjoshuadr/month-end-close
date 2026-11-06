@@ -152,7 +152,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                                       const after = compute(packet, answers, { ...overrides, [k]: n }).netIncomeAdj;
                                       const d = Math.round((after - computed.netIncomeAdj) * 100) / 100;
                                       setOverride(k, n);
-                                      push(`Amount edited: net income ${fmtDelta(d)}`, { ni: d, undo: true });
+                                      push(`Amount edited: net income ${fmtDelta(d)}`, { undo: true });
                                     }
                                   };
                                   const reset = () => {
@@ -161,7 +161,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                                     const after = compute(packet, answers, { ...overrides, [k]: n }).netIncomeAdj;
                                     const d = Math.round((after - computed.netIncomeAdj) * 100) / 100;
                                     setOverride(k, n);
-                                    push(`Amount reset: net income ${fmtDelta(d)}`, { ni: d, undo: true });
+                                    push(`Amount reset: net income ${fmtDelta(d)}`, { undo: true });
                                   };
                                   const inputFor = (side: "debit" | "credit", shown: number) => (
                                     <span className="cellwrap">

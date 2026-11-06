@@ -69,7 +69,7 @@ function Detail({ flag, done, onAdvance, cmd, onCmd }: {
     const after = compute(packet, { ...answers, [flag.id]: answer }, overrides).netIncomeAdj;
     const d = toastNi(before, after);
     setAnswer(flag.id, { ...answers[flag.id], ...answer });
-    push(`${label}: net income ${fmtDelta(d)}`, { ni: d, undo: true });
+    push(`${label}: net income ${fmtDelta(d)}`, { undo: true });
   };
 
   const save = () => {

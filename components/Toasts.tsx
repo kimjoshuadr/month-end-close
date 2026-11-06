@@ -3,9 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
 
-export type ToastOpts = { ni?: number; undo?: boolean };
+export type ToastOpts = { undo?: boolean };
 
-type Toast = { id: number; msg: string; ni?: number; undo?: boolean };
+type Toast = { id: number; msg: string; undo?: boolean };
 
 const Ctx = createContext<{ push: (msg: string, opts?: ToastOpts) => void }>({ push: () => {} });
 
@@ -53,12 +53,7 @@ function Item({ toast, onDone }: { toast: Toast; onDone: () => void }) {
         if (!done.current) start();
       }}
     >
-      <span>
-        {toast.msg}
-        {toast.ni !== undefined && (
-          <> · <span className="ni">NI {toast.ni < 0 ? "−" : "+"}${Math.abs(toast.ni).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></>
-        )}
-      </span>
+      <span>{toast.msg}</span>
       <span style={{ flex: 1 }} />
       {toast.undo && (
         <button
@@ -82,7 +77,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const push = useCallback((msg: string, opts?: ToastOpts) => {
     id.current += 1;
-    const t: Toast = { id: id.current, msg, ni: opts?.ni, undo: opts?.undo };
+    const t: Toast = { id: id.current, msg, undo: opts?.undo };
     setItems((prev) => [...prev.slice(-2), t]);
   }, []);
 

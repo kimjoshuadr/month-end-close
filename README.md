@@ -1,4 +1,4 @@
-# Close Desk: AI-assisted month-end close (demo)
+# Month-End Close: AI-assisted close tool (demo)
 
 ERP-style console (Close Packet, Journal Entries, Open Items, Financial Statements, Audit Trail). Reads a month-end packet (workbook + bank statement/invoices/client email PDF; .xlsx, .pdf, .txt, .csv), drafts adjusting journal entries with source citations, flags what the documents do not settle, lets the accountant answer or edit, and regenerates draft September 2026 financial statements (cover, income statement month and YTD, balance sheet, cash flows, trailing twelve months) in the August example format. All client data is fictional. Nothing is sent to anyone.
 
@@ -11,11 +11,11 @@ npm run e2e          # 108 Playwright tests (E2E_BASE_URL=<url> to test a deploy
 npm test             # 65 tests: engine, parser, store, reply mapper, TTM
 ```
 
-Live: https://greenline-close-desk.vercel.app (Vercel). Self-hosting with Docker / Coolify:
+Live: https://month-end-close.vercel.app (Vercel). Self-hosting with Docker / Coolify:
 
 ```bash
-docker build -t closedesk .
-docker run -p 3000:3000 -e DEEPSEEK_API_KEY=... closedesk
+docker build -t month-end-close .
+docker run -p 3000:3000 -e DEEPSEEK_API_KEY=... month-end-close
 ```
 
 On Coolify: new resource from this public repo, build pack "Dockerfile", port 3000, add `DEEPSEEK_API_KEY` as an environment variable (optional: without it the tool works fully; only the typed-reply fallback and Ask AI are disabled).

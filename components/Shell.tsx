@@ -117,7 +117,7 @@ function Frame({ children }: { children: React.ReactNode }) {
     <div>
       <header className="topnav">
       <div className="appbar">
-        <span className="wordmark">Close Desk</span>
+        <span className="wordmark">Month-End Close</span>
         <GlobalSearch />
         <div className="entity"><strong className="ename">Greenline Landscape Co., LLC</strong><span className="period-tag">Sep 2026</span></div>
         <div className="spacer" />

@@ -7,7 +7,7 @@ for (const route of ['/', '/entries', '/open-items', '/statements', '/audit']) {
     const w = watchErrors(page);
     const res = await page.goto(route);
     expect(res?.status()).toBe(200);
-    await expect(page.getByText('Close Desk').first()).toBeVisible();
+    await expect(page.getByText('Month-End Close').first()).toBeVisible();
     await page.waitForLoadState('networkidle');
     w.assertNone();
   });

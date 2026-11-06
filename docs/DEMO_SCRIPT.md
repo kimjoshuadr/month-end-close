@@ -2,7 +2,7 @@
 
 Record at 1440 wide, browser zoom 100%. Start on the Close Packet tab with a fresh session (Reset session).
 
-1. **Intro (15s).** "This is Close Desk, a month-end close tool for Greenline Landscape, September 2026. It drafts adjusting entries from the packet, flags what the documents don't settle, and produces the September statements."
+1. **Intro (15s).** "This is Month-End Close, an AI-assisted close tool for Greenline Landscape, September 2026. It drafts adjusting entries from the packet, flags what the documents don't settle, and produces the September statements."
 2. **Upload (30s).** Drag the workbook and the supporting PDF (and the August statements PDF) onto the upload rows. Point at the validation grid: bank ties to TB cash at 84,320; payroll ties to the two Gusto debits; materials and fuel tie to bank plus invoices, which is how the tool knows Green Valley and Summit are already booked; loan principal 1,640.
 3. **Journal Entries (45s).** Show the summary strip: unadjusted NI 38,200, adjusted 24,697.50, Dr = Cr 0.00. Expand AJE-001 to AJE-005 briefly: prepaid 1,800, depreciation 2,400, payroll accrual 3,052.50 (3 of 10 days), Lakeside electric 1,250, owner transfer reclass 5,000 (badged Assumed). Show the "checked, no entry" list: Green Valley, Summit, Northline (October). Show the NI bridge.
 4. **Edit a value (20s).** Change the electric amount to 2,000, watch adjusted NI drop by 750, then Reset.

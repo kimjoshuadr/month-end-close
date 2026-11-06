@@ -13,7 +13,7 @@ function cell(v: number, header: string, money: boolean): { text: string; pct: b
 }
 
 // August-format report table; every figure drills down.
-export function ReportTable({ tableId, table }: { tableId: "isMonth" | "isYtd" | "bs" | "cf"; table: Table }) {
+export function ReportTable({ tableId, table }: { tableId: "isMonth" | "isYtd" | "bs" | "cf" | "ttm"; table: Table }) {
   const { open } = useDrill();
   return (
     <div style={{ overflowX: "auto" }}>

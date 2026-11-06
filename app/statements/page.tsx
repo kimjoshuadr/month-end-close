@@ -12,24 +12,52 @@ import { fmtMoney } from "../../components/format";
 import { useDrill } from "../../components/erp-ui";
 
 const TABS = [
+  { id: "cover", label: "Cover" },
   { id: "isMonth", label: "Income Statement — month" },
   { id: "isYtd", label: "Income Statement — YTD" },
   { id: "bs", label: "Balance Sheet" },
   { id: "cf", label: "Cash Flows" },
+  { id: "ttm", label: "Trailing Twelve Months" },
 ] as const;
 
-const PERIODS: Record<(typeof TABS)[number]["id"], { title: string; period: string }> = {
+type TabId = (typeof TABS)[number]["id"];
+type ReportId = Exclude<TabId, "cover">;
+
+const PERIODS: Record<Exclude<TabId, "cover">, { title: string; period: string }> = {
   isMonth: { title: "Income Statement", period: "For the Month Ended September 30, 2026" },
   isYtd: { title: "Income Statement", period: "For the Nine Months Ended September 30, 2026" },
   bs: { title: "Balance Sheet", period: "As of September 30, 2026" },
   cf: { title: "Statement of Cash Flows", period: "For the Month and Nine Months Ended September 30, 2026" },
+  ttm: { title: "Trailing Twelve Month Income Statement", period: "October 2025 through September 2026" },
 };
+
+function NotesBox({ tab, label }: { tab: string; label: string }) {
+  const { notes, setNote } = useStore();
+  const [text, setText] = useState<string | null>(null);
+  const shown = text ?? notes[tab] ?? "";
+  return (
+    <div style={{ marginTop: 16 }}>
+      <label className="f" htmlFor={`notes-${tab}`}>Reviewer notes — {label}</label>
+      <textarea
+        id={`notes-${tab}`}
+        rows={2}
+        placeholder="Notes for the reviewer file…"
+        value={shown}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => {
+          if (text !== null && text !== (notes[tab] ?? "")) setNote(tab, text, label);
+          setText(null);
+        }}
+      />
+    </div>
+  );
+}
 
 function Body() {
   const { computed, packet, answers, overrides, final, toggleFinal } = useStore();
   const { open } = useDrill();
   const acct = useSearchParams().get("acct");
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("isMonth");
+  const [tab, setTab] = useState<TabId>("cover");
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -66,7 +94,7 @@ function Body() {
     );
   }
 
-  const meta = PERIODS[tab];
+  const tabLabel = TABS.find((t) => t.id === tab)?.label ?? tab;
   return (
     <div>
       <PageHeader
@@ -90,6 +118,7 @@ function Body() {
           </>
         }
       />
+      <p className="small muted" style={{ margin: "0 0 12px" }}>Statements are derived from the entries so they always tie; edit amounts in <Link href="/entries">Journal Entries</Link>.</p>
       <SummaryStrip computed={computed} />
       {!final && computed.unresolved > 0 && (
         <div className="alert warn">DRAFT — {computed.unresolved} unresolved items. Alternative answers swing net income by up to ${fmtMoney(swing)}. <Link href="/open-items">Resolve in the worklist</Link>.</div>
@@ -110,16 +139,30 @@ function Body() {
         </div>
         <div className="paper" style={{ border: "none", borderRadius: 0 }}>
           {!final && computed.unresolved > 0 && <div className="ribbon">Draft</div>}
-          <div className="paper-head">
-            <p className="eyebrow" style={{ color: "var(--muted)" }}>Greenline Landscape Co., LLC</p>
-            <h2>{meta.title}</h2>
-            <p className="muted small">{meta.period}</p>
-          </div>
-          <ReportTable tableId={tab} table={computed.statements[tab]} />
-          <p className="footnote small muted" style={{ fontStyle: "italic", marginTop: 12 }}>
-            Fictional example created for a hiring exercise. Amounts rounded to whole dollars.
-            {tab === "cf" && " Owner Contributions / Owner Loan Proceeds lines extend the August format."}
-          </p>
+          {tab === "cover" ? (
+            <div className="paper-head" style={{ padding: "64px 0" }}>
+              <p className="eyebrow" style={{ color: "var(--muted)" }}>Greenline Landscape Co., LLC</p>
+              <h2>Financial Statements</h2>
+              <p className="muted">September 30, 2026</p>
+              <p className="footnote small muted" style={{ fontStyle: "italic", marginTop: 32 }}>
+                Fictional example created for a hiring exercise.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="paper-head">
+                <p className="eyebrow" style={{ color: "var(--muted)" }}>Greenline Landscape Co., LLC</p>
+                <h2>{PERIODS[tab as ReportId].title}</h2>
+                <p className="muted small">{PERIODS[tab as ReportId].period}</p>
+              </div>
+              <ReportTable tableId={tab as ReportId} table={computed.statements[tab as ReportId]} />
+              <p className="footnote small muted" style={{ fontStyle: "italic", marginTop: 12 }}>
+                Fictional example created for a hiring exercise. Amounts rounded to whole dollars.
+                {tab === "cf" && " Owner Contributions / Owner Loan Proceeds lines extend the August format."}
+              </p>
+            </>
+          )}
+          <NotesBox tab={tab} label={tabLabel} />
         </div>
       </div>
     </div>

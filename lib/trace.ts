@@ -4,7 +4,7 @@ import type { BankLine, Computed, Invoice, Packet } from "./types";
 export type TraceKey =
   | { kind: "entry"; ajeId: string }
   | { kind: "aje-line"; ajeId: string; line: number }
-  | { kind: "statement"; table: "isMonth" | "isYtd" | "bs" | "cf"; label: string }
+  | { kind: "statement"; table: "isMonth" | "isYtd" | "bs" | "cf" | "ttm"; label: string }
   | { kind: "tie"; label: string };
 
 export type TraceBadge = { text: string; tone: "booked" | "assumed" | "notbooked" | "info" };

@@ -6,8 +6,8 @@ import { PageHeader, SummaryStrip } from "../components/Shell";
 import { IconCheck, IconDoc } from "../components/icons";
 
 const EXPECTED = [
-  { key: "workbook", label: "Workbook (.xlsx)", hint: "Trial balance, payroll register, prepaid schedule, fixed assets" },
-  { key: "supporting-documents", label: "Supporting PDF", hint: "Bank statement, invoices, client email" },
+  { key: "workbook", label: "Workbook (.xlsx, or .csv trial balance)", hint: "Trial balance, payroll register, prepaid schedule, fixed assets" },
+  { key: "supporting-documents", label: "Supporting PDF (or .txt)", hint: "Bank statement, invoices, client email" },
 ];
 
 export default function PacketPage() {
@@ -81,7 +81,7 @@ export default function PacketPage() {
             </div>
           );
         })}
-        <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])]); e.target.value = ""; }} />
+        <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf,.txt,.csv" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])]); e.target.value = ""; }} />
         {notice && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{notice}</div></div>}
         {errors.length > 0 && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{errors.map((e, i) => <div key={i}>{e}</div>)}</div></div>}
       </div>

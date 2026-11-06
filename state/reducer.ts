@@ -7,6 +7,7 @@ export type StoreState = {
   packet: Packet | null;
   answers: Answers;
   overrides: Overrides;
+  notes: Record<string, string>;
   audit: AuditEntry[];
   final: boolean;
   loading: boolean;
@@ -20,13 +21,14 @@ export type StoreAction =
   | { type: "override"; key: string; value: number; msg: string }
   | { type: "log"; msg: string }
   | { type: "toggle-final" }
+  | { type: "note"; report: string; text: string; msg: string }
   | { type: "set-loading"; loading: boolean }
   | { type: "set-upload"; missing: string[]; errors: string[] }
   | { type: "rehydrate"; state: StoreState }
   | { type: "reset" };
 
 export function createInitial(): StoreState {
-  return { packet: null, answers: {}, overrides: {}, audit: [], final: false, loading: false, missing: [], errors: [] };
+  return { packet: null, answers: {}, overrides: {}, notes: {}, audit: [], final: false, loading: false, missing: [], errors: [] };
 }
 
 function stamp(msg: string): AuditEntry {
@@ -37,7 +39,7 @@ function stamp(msg: string): AuditEntry {
 export function reducer(s: StoreState, a: StoreAction): StoreState {
   switch (a.type) {
     case "packet-loaded":
-      return { ...s, packet: a.packet, answers: {}, overrides: {}, final: false, loading: false, missing: [], errors: [], audit: [...s.audit, stamp(a.msg)] };
+      return { ...s, packet: a.packet, answers: {}, overrides: {}, notes: {}, final: false, loading: false, missing: [], errors: [], audit: [...s.audit, stamp(a.msg)] };
     case "answer":
       return { ...s, answers: { ...s.answers, [a.id]: a.answer }, audit: [...s.audit, stamp(a.msg)] };
     case "override": {
@@ -48,6 +50,8 @@ export function reducer(s: StoreState, a: StoreAction): StoreState {
       return { ...s, audit: [...s.audit, stamp(a.msg)] };
     case "toggle-final":
       return { ...s, final: !s.final, audit: [...s.audit, stamp(s.final ? "Reopened as draft" : "Marked as final (local state only)")] };
+    case "note":
+      return { ...s, notes: { ...s.notes, [a.report]: a.text }, audit: [...s.audit, stamp(a.msg)] };
     case "set-loading":
       return { ...s, loading: a.loading };
     case "set-upload":
@@ -69,7 +73,7 @@ export const SESSION_KEY = "closedesk.session.v1";
 
 // Persisted subset: everything needed to rebuild the close. Packet is plain JSON.
 export function serializeState(s: StoreState): string {
-  return JSON.stringify({ packet: s.packet, answers: s.answers, overrides: s.overrides, audit: s.audit, final: s.final });
+  return JSON.stringify({ packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, audit: s.audit, final: s.final });
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -95,7 +99,13 @@ export function deserializeState(raw: string | null | undefined): StoreState | n
     const audit: AuditEntry[] = Array.isArray(o.audit)
       ? o.audit.filter((e): e is AuditEntry => isRecord(e) && typeof e.ts === "string" && typeof e.msg === "string")
       : [];
-    return { packet: o.packet as Packet, answers, overrides, audit, final: o.final === true, loading: false, missing: [], errors: [] };
+    const notes: Record<string, string> = {};
+    if (isRecord(o.notes)) {
+      for (const [k, v] of Object.entries(o.notes)) {
+        if (typeof v === "string") notes[k] = v;
+      }
+    }
+    return { packet: o.packet as Packet, answers, overrides, notes, audit, final: o.final === true, loading: false, missing: [], errors: [] };
   } catch {
     return null;
   }

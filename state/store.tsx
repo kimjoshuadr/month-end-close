@@ -13,6 +13,7 @@ type Store = {
   packet: Packet | null;
   answers: Answers;
   overrides: Overrides;
+  notes: Record<string, string>;
   loading: boolean;
   missing: string[];
   errors: string[];
@@ -22,6 +23,7 @@ type Store = {
   upload: (files: File[]) => Promise<UploadResult>;
   setAnswer: (id: string, a: Answer) => void;
   setOverride: (key: string, n: number) => void;
+  setNote: (report: string, text: string, label: string) => void;
   toggleFinal: () => void;
   resetSession: () => void;
 };
@@ -75,6 +77,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const toggleFinal = useCallback(() => dispatch({ type: "toggle-final" }), []);
 
+  const setNote = useCallback((report: string, text: string, label: string) => {
+    dispatch({ type: "note", report, text, msg: `Reviewer note saved for ${label}` });
+  }, []);
+
   const resetSession = useCallback(() => {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -107,8 +113,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(() => {
     const computed: Computed | null = s.packet ? compute(s.packet, s.answers, s.overrides) : null;
-    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, toggleFinal, resetSession };
-  }, [s, loadSample, upload, setAnswer, setOverride, toggleFinal, resetSession]);
+    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession };
+  }, [s, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

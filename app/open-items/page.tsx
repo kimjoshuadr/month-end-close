@@ -113,7 +113,7 @@ function Detail({ flag, done, onAdvance }: { flag: Flag; done: number; onAdvance
                     }}
                   />
                   <span>{o.label}{o.id === flag.defaultOption && !/default/i.test(o.label) ? " (default)" : ""}</span>
-                  <span className="ni">NI ${fmtMoney(niFor[o.id] ?? 0)}</span>
+                  <span className="ni">NI ${fmtMoney(niFor[o.id] ?? 0)}{o.id === "loan" && flag.id === "owner-transfer" ? " · new account, not in TB, requires approval" : ""}</span>
                 </label>
               ))}
             </div>
@@ -150,7 +150,7 @@ function Body() {
   if (!computed) {
     return (
       <div>
-        <PageHeader crumb="Open Items" title="Open Items" final={final} unresolved={0} />
+        <PageHeader crumb="Open Items" title="Open Items" final={final} unresolved={0} empty />
         <SummaryStrip computed={null} />
         <div className="panel"><div className="panel-b muted">Load the packet to see the items that need your judgment.</div></div>
       </div>
@@ -175,7 +175,7 @@ function Body() {
   if (!computed) {
     return (
       <div>
-        <PageHeader crumb="Open Items" title="Open Items" final={final} unresolved={0} />
+        <PageHeader crumb="Open Items" title="Open Items" final={final} unresolved={0} empty />
         <SummaryStrip computed={null} />
         <div className="panel"><div className="panel-b muted">Load the packet to see the items that need your judgment.</div></div>
       </div>

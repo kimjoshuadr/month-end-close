@@ -68,4 +68,12 @@ describe("store reducer", () => {
     expect(cleared).toEqual(createInitial());
     expect(selectComputed(cleared)).toBeNull();
   });
+  it("reviewer notes persist and log to the audit trail", async () => {
+    let s = reducer(createInitial(), { type: "packet-loaded", packet: await packet(), msg: "loaded" });
+    s = reducer(s, { type: "note", report: "isMonth", text: "NI ties to bridge.", msg: "Reviewer note saved for Income Statement — month" });
+    expect(s.notes.isMonth).toBe("NI ties to bridge.");
+    expect(s.audit[s.audit.length - 1].msg).toMatch(/Reviewer note saved/);
+    const restored = deserializeState(serializeState(s));
+    expect(restored?.notes.isMonth).toBe("NI ties to bridge.");
+  });
 });

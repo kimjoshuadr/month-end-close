@@ -91,13 +91,17 @@ function GlobalSearch() {
 }
 
 // Breadcrumb + title + status + per-page toolbar.
-export function PageHeader({ crumb, title, final, unresolved, toolbar }: { crumb: string; title: string; final: boolean; unresolved: number; toolbar?: React.ReactNode }) {
+export function PageHeader({ crumb, title, final, unresolved, empty, toolbar }: { crumb: string; title: string; final: boolean; unresolved: number; empty?: boolean; toolbar?: React.ReactNode }) {
   return (
     <>
       <nav className="crumb" aria-label="Breadcrumb">Close / Sep 2026 / <span>{crumb}</span></nav>
       <div className="headrow">
         <h1>{title}</h1>
-        <span className={`lozenge ${final ? "final" : "draft"}`}>{final ? "Final" : `Draft · ${unresolved} open`}</span>
+        {empty ? (
+          <span className="lozenge nopacket">No packet</span>
+        ) : (
+          <span className={`lozenge ${final ? "final" : "draft"}`}>{final ? "Final" : `Draft · ${unresolved} open`}</span>
+        )}
         <div className="toolbar">{toolbar}</div>
       </div>
     </>

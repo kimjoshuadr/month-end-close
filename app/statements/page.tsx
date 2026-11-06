@@ -59,7 +59,7 @@ function Body() {
   if (!computed) {
     return (
       <div>
-        <PageHeader crumb="Financial Statements" title="Financial Statements" final={final} unresolved={0} />
+        <PageHeader crumb="Financial Statements" title="Financial Statements" final={final} unresolved={0} empty />
         <SummaryStrip computed={null} />
         <div className="panel"><div className="panel-b muted">Load the packet to generate the September reports.</div></div>
       </div>

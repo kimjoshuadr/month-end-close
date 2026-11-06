@@ -10,7 +10,7 @@ export default function AuditPage() {
   const rows = [...audit].reverse().filter((e) => e.msg.toLowerCase().includes(q.trim().toLowerCase()));
   return (
     <div>
-      <PageHeader crumb="Audit Trail" title="Audit Trail" final={final} unresolved={computed?.unresolved ?? 0} />
+      <PageHeader crumb="Audit Trail" title="Audit Trail" final={final} unresolved={computed?.unresolved ?? 0} empty={!computed} />
       <SummaryStrip computed={computed} />
       <div className="panel">
         <div className="panel-h">

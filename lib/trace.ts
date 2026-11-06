@@ -82,7 +82,7 @@ const BS_ACCTS: Record<string, number[]> = {
   Cash: [1000], "Accounts Receivable": [1200], "Prepaid Insurance": [1300],
   "Total Current Assets": [1000, 1200, 1300], "Fixed Assets, Net of Accumulated Depreciation": [1500, 1510],
   "TOTAL ASSETS": [1000, 1200, 1300, 1500, 1510], "Accounts Payable": [2000], "Accrued Payroll": [2200],
-  "Total Current Liabilities": [2000, 2200], "Equipment Loan": [2500], "Owner Loan": [2600],
+  "Total Current Liabilities": [2000, 2200], "Equipment Loan": [2500], "Owner Loan (new — not in trial balance, requires approval)": [2600],
   "Total Long-Term Liabilities": [2500, 2600], "TOTAL LIABILITIES": [2000, 2200, 2500, 2600],
   "Owner's Capital": [3000], "Owner Contributions": [3100], "Retained Earnings": [3900],
   "September Net Income": [], "TOTAL EQUITY": [3000, 3100, 3900], "TOTAL LIABILITIES & EQUITY": [2000, 2200, 2500, 2600, 3000, 3100, 3900],
@@ -120,7 +120,7 @@ function acctNos(labels: string[]): number[] {
 }
 
 function acctName(p: Packet, no: number): string {
-  return p.tb.find((r) => r.no === no)?.name ?? (no === 2600 ? "Owner Loan" : `Account ${no}`);
+  return p.tb.find((r) => r.no === no)?.name ?? (no === 2600 ? "Owner Loan (new — not in trial balance, requires approval)" : `Account ${no}`);
 }
 
 export type StatementRef = { table: "isMonth" | "isYtd" | "bs" | "cf"; label: string };

@@ -1,27 +1,58 @@
 # Submission write-up
 
-## What I built
-Close Desk, a single-page web tool (Next.js, Docker). Upload the packet (or one-click "Load sample packet"), see drafted AJEs with a source on every line and a net income bridge, work through flagged items (buttons or typed replies), edit any amount, and view September 2026 statements (income statement month and YTD, balance sheet, cash flows) in the August format. Every change recomputes everything.
+Live tool: <COOLIFY_URL> · Recording: <RECORDING_URL> · Code: https://github.com/kimjoshuadr/greenline-close-desk
 
-## How it works end to end
-1. Deterministic parsers extract the trial balance, payroll register, prepaid and fixed-asset schedules, bank lines, invoices and the client email, then tie them out (bank to TB cash, payroll to Gusto debits, expense lines to bank plus invoices, loan principal).
-2. A pure engine drafts entries: prepaid amortization $1,800, depreciation $2,400, payroll accrual $3,052.50 (3 of 10 working days of Sep 26 to Oct 9), unrecorded Lakeside electric $1,250, and a reclass of the $5,000 owner transfer out of revenue.
-3. It deliberately does not book: Green Valley and Summit Fuel (already in the TB, derived by matching TB vs bank + invoices), and Northline rental (October period).
-4. Seven items are flagged (the $5,000 transfer, $9,490 of AP with no support, the Aug 31 payroll cutoff, the accrual method, revenue classification, no September distributions, Northline). Answering one changes the entries and statements immediately.
-5. Statements use August balances and prior-year comparatives (Sep-25 from the TTM page), so September ties to August.
+## 1. What I built and with which tools
+Close Desk is a web tool in the style of an ERP console (Next.js and TypeScript in one Docker container, deployed on Coolify). It has five modules: Close Packet, Journal Entries, Open Items, Financial Statements and Audit Trail. A live summary strip on every page shows unadjusted net income, adjustments, adjusted net income, Dr = Cr, unresolved items and entries booked.
 
-## Automated vs accountant
-Automated: extraction, tie-outs, schedule/invoice/payroll entries, statements, recompute. Accountant: the $5,000 treatment, AP support, prior-period payroll cutoff, accepting assumptions, final review. Entries booked on a documented default carry an "assumed" badge until answered. Unsupported items are never booked silently.
+- **Why this stack:** one container is easy to host privately; TypeScript keeps the accounting engine typed and testable; there is no database because this demo should not store client data.
+- **AI at runtime:** DeepSeek, server-side only, used for three things: a fallback if a document can't be parsed by fixed rules, turning a typed answer into a choice, and an "Ask AI" panel that explains entries. It never produces numbers.
 
-## How I used AI to build it
-I acted as orchestrator in Claude Code: read the packet myself to find the traps and compute expected numbers by hand (adjusted net income $24,697.50, total assets $231,120), brainstormed the design with clarifying questions, had a separate reviewer agent challenge the design doc, wrote a task-by-task plan with test assertions, then delegated implementation to Muse Spark 1.3 Contributor via OpenCode. I reviewed each handoff by re-running tests and screenshotting at mobile, tablet and desktop widths. Iterations that came from review: overrides not reaching the entry cards, state lost on reload (now sessionStorage), tablet and mobile table clipping, statements switched to whole dollars as in the August PDF. Logic that touches money is covered by 46 tests built from my hand calculations.
+## 2. How it works end to end
+1. **Read the packet.** Fixed parsing rules read the workbook (trial balance, payroll register, prepaid and fixed asset schedules) and the supporting PDF (bank statement, invoices, client email). It accepts .xlsx, .pdf, .txt and .csv. It then ties the documents out: bank ending balance to TB cash (84,320), payroll to the two Gusto debits, Materials and Fuel to bank plus invoices, and loan principal (1,640).
+2. **Draft the entries** (each line cites its source, every entry balances):
+   - AJE-001 prepaid insurance 1,800
+   - AJE-002 depreciation 2,400
+   - AJE-003 payroll accrual 3,052.50 (Sep 28 to 30 is 3 of 10 working days, plus 10% tax)
+   - AJE-004 Lakeside electric 1,250 (September service, never recorded)
+   - AJE-005 reclass of the $5,000 owner transfer out of revenue to Owner Contributions (booked as an assumption)
+   - Net income goes from 38,200 to 24,697.50, shown as a bridge.
+3. **Leave alone what is already right**, and say why: Green Valley and Summit Fuel are already in the TB (Materials 14,200 = 7,380 + 6,820; Fuel 4,300 = 2,160 + 2,140), and the Northline rental is an October expense.
+4. **Flag what the documents don't settle** (7 items): the $5,000 transfer (contribution, loan or revenue), $9,490 of AP with no support, the Aug 31 payroll day expensed in September, the accrual method, revenue classification, no September distributions, and Northline. The accountant answers with buttons or a typed reply. Each option shows its net income effect, and answers update entries and statements immediately.
+5. **Produce the statements** in the August format: cover, income statement for the month and year to date (2026 vs 2025, % of revenue), balance sheet, cash flows (month and YTD), and trailing twelve months.
+   - Prior-year and opening balances come from the August package, so September ties: total assets 231,120, balanced; cash flow ends at 84,320, which equals the bank.
+   - Click any figure to drill into the entries and source documents behind it.
+6. **Review before final.** Statements stay DRAFT while items are unresolved. The accountant edits amounts in Journal Entries, which the statements follow, so they always tie. There are reviewer notes per statement, and every action is logged in the audit trail. Nothing is sent to the client.
 
-## Not finished / limits
-- Parsing is tuned to this packet's layout; other layouts rely on the DeepSeek fallback, which I could not test broadly.
-- Statements round each value to whole dollars like the August PDF, so a total can differ by $1 from a hand re-foot of the rounded lines.
-- TTM page not built (optional). Docker build was not run on my machine (no Docker locally); verify on Coolify.
-- The $5,000 treatment and the revenue account it was credited to are inferences from the bank line and Dana's email.
-- No export to PDF beyond browser print; no auth.
+## 3. Automated vs accountant
+- **Automated:** extraction, tie-outs, schedule, invoice and payroll entries, detecting already-recorded invoices, statements, recalculation.
+- **Accountant:** the treatment of the $5,000 (and approving the new Owner Loan account 2600 if they choose "loan"), AP support, the prior-period payroll cutoff, accepting the assumptions, and final review.
+- **Guardrail:** entries booked on a documented default carry an "Assumed" badge until answered, and unsupported items are never booked silently.
 
-## To make it production-ready
-Client data must live in an access-controlled store (per-client tenancy, encryption at rest, role-based access, SSO, audit log retention), not browser storage. Sending financial documents to a third-party LLM needs a data-processing agreement or a self-hosted/enterprise model. I would also need real packets from several clients to harden the parsers, the firm's chart-of-accounts and judgment policies, and their review/approval workflow.
+## 4. How I used AI to build it
+- **Orchestrator and executor.** I worked in Claude Code as the orchestrator, with Muse Spark 1.3 Contributor (via OpenCode) as the executor that wrote the code.
+- **I did the accounting first.** Before any code, I read the packet myself, found the traps (already-recorded invoices, the out-of-period rental, the owner money in revenue, the payroll cutoff), and calculated the expected results by hand. Those numbers became the tests the executor had to pass.
+- **Structured prompts.** A design document, then a reviewer agent questioned it, then a plan of ten tasks with exact function signatures and expected values. The executor worked test-first and committed per task.
+- **Review loop.** After each handoff I re-ran the tests and checked screenshots at mobile, tablet and desktop widths. Review caught:
+  - edits not reaching the entry cards
+  - state lost on reload
+  - tables clipped on tablets
+  - a page that only crashed in a production build
+  - a Save button that blocked confirming a default
+- **Design iterations.** First a simple dashboard. Then I explored three directions with mockups. Finally I settled on an ERP console (NetSuite / Intacct style), because that is how accountants actually work.
+
+## 5. Challenges, limits and next steps
+- **Not feasible or not finished:**
+  - The parsing rules are tuned to this packet's layout. Other layouts fall back to DeepSeek, which I could not test broadly.
+  - The treatment of the $5,000 is an inference from the bank line and the client's email.
+  - Statements round each line to whole dollars like the August PDF, so a total can be $1 off a hand re-foot.
+  - Export is browser print to PDF.
+  - There is no login.
+- **What I would build next:** a reviewer sign-off workflow, export to the GL (e.g. QuickBooks / NetSuite journal import), learning a client's recurring entries month to month, and support for more document layouts.
+- **What I'd need from you for production:**
+  - Client data should live in an access-controlled store per client: encrypted, with role-based access for the assigned accountant and reviewer only, SSO, and retained audit logs.
+  - It must never live in a browser session.
+  - Client documents should only go to an LLM covered by a data-processing agreement (or an enterprise or self-hosted model).
+  - Real packets from several clients to harden the parsers.
+  - Your chart of accounts and policies for judgment calls.
+  - Your review and approval workflow.

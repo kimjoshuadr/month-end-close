@@ -12,7 +12,7 @@ function Body() {
   if (!computed) {
     return (
       <div>
-        <PageHeader crumb="Journal Entries" title="Journal Entries" final={final} unresolved={0} />
+        <PageHeader crumb="Journal Entries" title="Journal Entries" final={final} unresolved={0} empty />
         <SummaryStrip computed={null} />
         <div className="panel"><div className="panel-b muted">Load the packet to review the drafted entries.</div></div>
       </div>

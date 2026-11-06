@@ -36,7 +36,7 @@ export function adjustedTb(tb: TbRow[], ajes: Aje[]): TbRow[] {
     for (const l of a.lines) {
       let row = adj.find((r) => r.no === l.acct);
       if (!row) {
-        row = { no: l.acct, name: l.acct === 2600 ? "Owner Loan" : `Account ${l.acct}`, debit: 0, credit: 0 };
+        row = { no: l.acct, name: l.acct === 2600 ? "Owner Loan (new — not in trial balance, requires approval)" : `Account ${l.acct}`, debit: 0, credit: 0 };
         adj.push(row);
       }
       row.debit = r2(row.debit + l.debit);
@@ -127,7 +127,7 @@ export function buildStatements(packet: Packet, ajes: Aje[]): Statements {
     { label: "Total Current Liabilities", values: [r2(ap + acc)], kind: "subtotal" },
     { label: "Equipment Loan", values: [loan], kind: "line" },
   ];
-  if (oloan !== 0) bsRows.push({ label: "Owner Loan", values: [oloan], kind: "line" });
+  if (oloan !== 0) bsRows.push({ label: "Owner Loan (new — not in trial balance, requires approval)", values: [oloan], kind: "line" });
   const totalLiab = r2(ap + acc + loan + oloan);
   const totalEq = r2(cap + contrib + re + ni);
   bsRows.push(

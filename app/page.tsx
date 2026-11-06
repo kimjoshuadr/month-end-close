@@ -36,6 +36,7 @@ export default function PacketPage() {
         title="Close Packet — September 2026"
         final={final}
         unresolved={computed?.unresolved ?? 0}
+        empty={!computed}
         toolbar={
           <>
             <button className="btn primary" disabled={loading} onClick={async () => { setNotice(null); await loadSample(); }}>

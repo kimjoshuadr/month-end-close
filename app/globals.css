@@ -159,6 +159,7 @@ a { color: var(--blue-dark); }
 }
 .lozenge.draft { background: var(--orange-tint); color: #b25a10; border: 1px solid #f3cf9f; }
 .lozenge.final { background: var(--green-tint); color: var(--green); border: 1px solid #bfe0cd; }
+.lozenge.nopacket { background: #eef1f5; color: var(--muted); border: 1px solid var(--border); }
 
 /* Buttons */
 .btn {

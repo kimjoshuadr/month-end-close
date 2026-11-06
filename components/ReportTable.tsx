@@ -3,6 +3,7 @@
 import type { BsTable, CfTable, IsTable } from "../lib/types";
 import { fmtWhole } from "./format";
 import { useDrill } from "./erp-ui";
+import { Changed } from "./useChanged";
 
 type Table = IsTable | BsTable | CfTable;
 
@@ -38,7 +39,7 @@ export function ReportTable({ tableId, table }: { tableId: "isMonth" | "isYtd" |
                   return (
                     <td key={j} className={`num${c.pct ? " pctcol" : ""}`}>
                       <button className="cellbtn" onClick={() => open({ kind: "statement", table: tableId, label: r.label })} aria-label={`Drill into ${r.label}: ${c.text}`} title="Drill down">
-                        {c.text}
+                        <Changed value={c.text}>{c.text}</Changed>
                       </button>
                     </td>
                   );

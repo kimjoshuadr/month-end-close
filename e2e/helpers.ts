@@ -37,15 +37,18 @@ export async function loadSample(page: Page) {
 }
 
 // Adjusted NI from the summary strip, waiting for the count transition to settle.
+// Delta chips render inside the KPI, so extract the first dollar figure.
 export async function stripNI(page: Page): Promise<string> {
   const strip = page.locator('.strip');
   await expect(strip).toBeVisible();
   let prev = '';
   for (let i = 0; i < 20; i++) {
     const kpis = await strip.locator('.kpi').allInnerTexts();
-    const adj = (kpis.find((k) => k.startsWith('ADJUSTED NI')) ?? '').replace('ADJUSTED NI', '').trim();
-    if (adj === prev && adj !== '') return adj;
-    prev = adj;
+    const adj = kpis.find((k) => k.startsWith('ADJUSTED NI')) ?? '';
+    const m = /\$[\d,]+\.\d{2}/.exec(adj);
+    const val = m ? m[0] : '';
+    if (val === prev && val !== '') return val;
+    prev = val;
     await page.waitForTimeout(120);
   }
   return prev;

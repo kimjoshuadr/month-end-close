@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useStore } from "../state/store";
 import { PageHeader, SummaryStrip } from "../components/Shell";
 import { IconCheck, IconDoc } from "../components/icons";
@@ -10,15 +10,29 @@ const EXPECTED = [
   { key: "supporting-documents", label: "Supporting PDF (or .txt)", hint: "Bank statement, invoices, client email" },
 ];
 
+const ACCEPTED = [".xlsx", ".xls", ".pdf", ".txt", ".csv"];
+
+function acceptedName(name: string): boolean {
+  const lower = name.toLowerCase();
+  return ACCEPTED.some((ext) => lower.endsWith(ext));
+}
+
 export default function PacketPage() {
   const { computed, packet, loading, missing, errors, final, loadSample, upload, resetSession } = useStore();
   const [over, setOver] = useState<string | null>(null);
+  const [invalid, setInvalid] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputKey = useRef<string | null>(null);
 
   const send = async (files: File[]) => {
     if (!files.length) return;
+    const bad = files.filter((f) => !acceptedName(f.name));
+    if (bad.length > 0) {
+      setInvalid(`"${bad[0].name}" is not a packet file. Drop an .xlsx workbook, supporting .pdf/.txt, or .csv trial balance.`);
+      return;
+    }
+    setInvalid(null);
     setNotice(null);
     const r = await upload(files);
     if (!r.ok) setNotice(`Packet incomplete. Missing: ${r.missing.join(", ") || "none"}. ${r.errors.join(" ")}`);
@@ -28,6 +42,8 @@ export default function PacketPage() {
     inputKey.current = key;
     inputRef.current?.click();
   };
+
+  const ties = useMemo(() => computed?.proposal.ties ?? [], [computed]);
 
   return (
     <div>
@@ -39,7 +55,8 @@ export default function PacketPage() {
         empty={!computed}
         toolbar={
           <>
-            <button className="btn primary" disabled={loading} onClick={async () => { setNotice(null); await loadSample(); }}>
+            <button className={`btn primary${loading ? " loading" : ""}`} disabled={loading} onClick={async () => { setNotice(null); await loadSample(); }}>
+              {loading && <span className="spin" aria-hidden="true" />}
               {loading ? "Loading…" : "Load sample packet"}
             </button>
             {(computed) && (
@@ -65,39 +82,70 @@ export default function PacketPage() {
               </div>
               <span className={`st ${computed && !isMissing ? "ok" : "unresolved"}`}>{computed && !isMissing ? "Loaded" : "Missing"}</span>
               <div
-                className={`dropmini${over === f.key ? " over" : ""}`}
+                className={`dropmini${over === f.key ? " over" : ""}${invalid && over === f.key ? " invalid" : ""}`}
                 style={{ minWidth: 220 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Drop file or Browse — ${f.label}`}
+                aria-label={loading ? `Parsing files…` : `Drop file or Browse — ${f.label}`}
+                aria-busy={loading}
                 onClick={() => browse(f.key)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") browse(f.key); }}
-                onDragOver={(e) => { e.preventDefault(); setOver(f.key); }}
-                onDragLeave={() => setOver(null)}
-                onDrop={(e) => { e.preventDefault(); setOver(null); send([...e.dataTransfer.files]); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if ([...(e.dataTransfer.items ?? [])].some((it) => it.kind === "file")) {
+                    setOver(f.key);
+                  }
+                }}
+                onDragLeave={() => { setOver(null); setInvalid(null); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setOver(null);
+                  send([...e.dataTransfer.files]);
+                }}
               >
-                Drop file or Browse
+                {loading ? "Parsing…" : over === f.key ? <span className="rel">Release to upload</span> : "Drop file or Browse"}
               </div>
             </div>
           );
         })}
         <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf,.txt,.csv" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])]); e.target.value = ""; }} />
+        {invalid && <div style={{ padding: "0 14px 12px" }}><div className="alert error" role="alert" style={{ margin: 0 }}>{invalid}</div></div>}
         {notice && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{notice}</div></div>}
         {errors.length > 0 && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{errors.map((e, i) => <div key={i}>{e}</div>)}</div></div>}
       </div>
 
       <div className="panel">
         <div className="panel-h">Validation and tie-outs</div>
-        {!computed && <div className="panel-b muted">Load the sample packet or drop the two files to run validation.</div>}
-        {computed && (
+        {!computed && !loading && <div className="panel-b muted">Load the sample packet or drop the two files to run validation.</div>}
+        {loading && (
+          <div className="gridwrap" role="region" aria-label="Validating files" aria-busy="true" tabIndex={0}>
+            <table className="grid">
+              <thead>
+                <tr><th scope="col">Check</th><th scope="col" className="num">Expected</th><th scope="col" className="num">Actual</th><th scope="col" className="num">Difference</th><th scope="col">Status</th></tr>
+              </thead>
+              <tbody>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td><div className="skel" style={{ width: 130 }} /></td>
+                    <td className="num"><div className="skel" style={{ width: 70, marginLeft: "auto" }} /></td>
+                    <td className="num"><div className="skel" style={{ width: 70, marginLeft: "auto" }} /></td>
+                    <td className="num"><div className="skel" style={{ width: 50, marginLeft: "auto" }} /></td>
+                    <td><div className="skel" style={{ width: 44 }} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {computed && !loading && (
           <div className="gridwrap" role="region" aria-label="Validation and tie-outs" tabIndex={0}>
             <table className="grid">
               <thead>
                 <tr><th scope="col">Check</th><th scope="col" className="num">Expected</th><th scope="col" className="num">Actual</th><th scope="col" className="num">Difference</th><th scope="col">Status</th></tr>
               </thead>
               <tbody>
-                {computed.proposal.ties.map((t) => (
-                  <tr key={t.label}>
+                {ties.map((t, i) => (
+                  <tr key={t.label} className="row-in" style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}>
                     <td>{t.label}</td>
                     <td className="num">{t.expected.toLocaleString()}</td>
                     <td className="num">{t.actual.toLocaleString()}</td>

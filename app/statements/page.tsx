@@ -6,10 +6,10 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { compute } from "../../lib/engine";
 import { firstRowForAccount } from "../../lib/trace";
 import { useStore } from "../../state/store";
-import { ReportTable } from "../../components/ReportTable";
-import { PageHeader, SummaryStrip } from "../../components/Shell";
+import { ReportTable } from "../../components/ReportTable";import { PageHeader, SummaryStrip } from "../../components/Shell";
 import { fmtMoney } from "../../components/format";
 import { useDrill } from "../../components/erp-ui";
+import { useToasts } from "../../components/Toasts";
 
 const TABS = [
   { id: "cover", label: "Cover" },
@@ -33,6 +33,7 @@ const PERIODS: Record<Exclude<TabId, "cover">, { title: string; period: string }
 
 function NotesBox({ tab, label }: { tab: string; label: string }) {
   const { notes, setNote } = useStore();
+  const { push } = useToasts();
   const [text, setText] = useState<string | null>(null);
   const shown = text ?? notes[tab] ?? "";
   return (
@@ -45,7 +46,10 @@ function NotesBox({ tab, label }: { tab: string; label: string }) {
         value={shown}
         onChange={(e) => setText(e.target.value)}
         onBlur={() => {
-          if (text !== null && text !== (notes[tab] ?? "")) setNote(tab, text, label);
+          if (text !== null && text !== (notes[tab] ?? "")) {
+            setNote(tab, text, label);
+            push("Reviewer note saved", { undo: true });
+          }
           setText(null);
         }}
       />
@@ -55,6 +59,7 @@ function NotesBox({ tab, label }: { tab: string; label: string }) {
 
 function Body() {
   const { computed, packet, answers, overrides, final, toggleFinal } = useStore();
+  const { push } = useToasts();
   const { open } = useDrill();
   const acct = useSearchParams().get("acct");
   const [tab, setTab] = useState<TabId>("cover");
@@ -106,10 +111,10 @@ function Body() {
           <>
             <button className="btn small" onClick={() => window.print()}>Print / PDF</button>
             {final ? (
-              <button className="btn small" onClick={toggleFinal}>Reopen</button>
+              <button className="btn small" onClick={() => { toggleFinal(); push("Reopened as draft", { undo: true }); }}>Reopen</button>
             ) : confirming ? (
               <>
-                <button className="btn primary small" onClick={() => { toggleFinal(); setConfirming(false); }}>Confirm final</button>
+                <button className="btn primary small" onClick={() => { toggleFinal(); setConfirming(false); push("Marked as final", { undo: true }); }}>Confirm final</button>
                 <button className="btn small" onClick={() => setConfirming(false)}>Cancel</button>
               </>
             ) : (

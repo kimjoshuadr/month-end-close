@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { isEditableTarget, nextShortcut, type ShortcutAction } from "../lib/shortcuts";
-import { useStore } from "../state/store";
+import { isEditableTarget, nextShortcut, type ShortcutAction } from "../lib/shortcuts";import { useStore } from "../state/store";
 import { Dialog } from "./Dialog";
 
 export const SHORTCUT_HELP: { keys: string; what: string }[] = [
@@ -26,7 +25,7 @@ const ROUTES: Partial<Record<ShortcutAction, string>> = {
 };
 
 // Global keys: search, module jumps, help, Esc-for-help, Ctrl/Cmd+Z.
-// Worklist keys (j/k/1-3/Enter) are broadcast for the Open Items page.
+// Worklist keys (j/k/1-3/Enter) are handled by the Open Items page itself.
 export function ShortcutManager() {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,11 +78,8 @@ export function ShortcutManager() {
       const route = ROUTES[action];
       if (route && route !== pathname) {
         router.push(route);
-        return;
       }
-      if (action === "next-item" || action === "prev-item" || action === "opt-1" || action === "opt-2" || action === "opt-3" || action === "save") {
-        window.dispatchEvent(new CustomEvent<ShortcutAction>("close-shortcut", { detail: action }));
-      }
+      return;
     };
     document.addEventListener("keydown", fn);
     return () => {

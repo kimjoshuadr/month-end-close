@@ -1,0 +1,28 @@
+export type TbRow = { no: number; name: string; debit: number; credit: number };
+export type BankLine = { date: string; description: string; withdrawal: number; deposit: number; balance: number };
+export type Invoice = { vendor: string; number: string; date: string; due?: string; periodNote?: string; total: number; lines: { desc: string; amount: number }[] };
+export type Packet = {
+  tb: TbRow[];
+  payroll: { periods: { label: string; gross: number; taxes: number }[]; nextPeriod: { start: string; end: string; payDate: string }; taxRate: number; grossPerPeriod: number };
+  prepaid: { monthlyAmort: number; rows: { month: string; amort: number; recorded: string }[]; assetAcct: 1300; expenseAcct: 6160 };
+  assets: { monthlyDep: number; assetAcct: 1500; accumAcct: 1510; expenseAcct: 6170 };
+  bank: { begin: number; end: number; lines: BankLine[] };
+  invoices: Invoice[];
+  email: { from: string; date: string; body: string };
+};
+export type AjeLine = { acct: number; debit: number; credit: number; source: string };
+export type Aje = { id: string; title: string; status: 'booked' | 'not_booked'; assumed: boolean; flagId?: string; lines: AjeLine[] };
+export type FlagOption = { id: string; label: string };
+export type Flag = { id: string; title: string; evidence: string; kind: 'decision' | 'info'; options: FlagOption[]; defaultOption: string };
+export type Answer = { option?: string; amount?: number; ack?: boolean };
+export type Answers = Record<string, Answer>;
+export type Overrides = Record<string, number>;
+export type Checked = { title: string; reason: string };
+export type Tie = { label: string; expected: number; actual: number; ok: boolean };
+export type Proposal = { ajes: Aje[]; flags: Flag[]; checked: Checked[]; ties: Tie[] };
+export type Computed = { proposal: Proposal; adjTb: TbRow[]; netIncomeUnadj: number; netIncomeAdj: number; balanced: boolean; statements: Statements; unresolved: number };
+export type TableRow = { label: string; values: number[]; kind: 'line' | 'subtotal' | 'total' | 'header' };
+export type IsTable = { headers: string[]; rows: TableRow[] };
+export type BsTable = { headers: string[]; rows: TableRow[] };
+export type CfTable = { headers: string[]; rows: TableRow[] };
+export type Statements = { isMonth: IsTable; isYtd: IsTable; bs: BsTable; cf: CfTable };

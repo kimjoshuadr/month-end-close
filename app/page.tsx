@@ -1,18 +1,49 @@
 "use client";
 
-import { useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
+import { IconArrowR, IconCheck, IconFile, IconReset, IconUpload } from "../components/icons";
+import { usePrefersReducedMotion } from "../components/studio";
 
-const EXPECTED = [
-  { key: "workbook", label: "Month-end workbook (.xlsx)" },
-  { key: "supporting-documents", label: "Supporting documents (.pdf)" },
+const FILES = [
+  { key: "workbook", label: "Month-end workbook", sub: "Trial balance · payroll · prepaid · fixed assets" },
+  { key: "supporting-documents", label: "Supporting documents", sub: "Bank statement · 4 invoices · client email" },
 ];
 
-export default function UploadPage() {
-  const { computed, loading, missing, errors, audit, loadSample, upload, resetSession } = useStore();
+export default function PacketPage() {
+  const { computed, loading, missing, errors, loadSample, upload, resetSession } = useStore();
   const [over, setOver] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const reduced = usePrefersReducedMotion();
+
+  const ties = computed?.proposal.ties ?? [];
+  const totalTicks = FILES.length + ties.length;
+  const reading = !!computed && revealed < totalTicks;
+
+  useEffect(() => {
+    if (!computed) {
+      setRevealed(0);
+      return;
+    }
+    if (reduced) {
+      setRevealed(totalTicks);
+      return;
+    }
+    setRevealed(0);
+    const id = window.setInterval(() => {
+      setRevealed((r) => {
+        if (r >= totalTicks) {
+          window.clearInterval(id);
+          return r;
+        }
+        return r + 1;
+      });
+    }, 380);
+    return () => window.clearInterval(id);
+  }, [computed, totalTicks, reduced]);
 
   const send = async (files: File[]) => {
     if (!files.length) return;
@@ -21,87 +52,100 @@ export default function UploadPage() {
     if (!r.ok) setNotice(`Could not build the packet. Missing: ${r.missing.join(", ") || "none"}. ${r.errors.join(" ")}`);
   };
 
+  const booked = computed?.proposal.ajes.filter((a) => a.status === "booked").length ?? 0;
+  const checked = computed?.proposal.checked.length ?? 0;
+  const flags = computed?.proposal.flags.length ?? 0;
+
   return (
     <div>
-      <p className="eyebrow">Upload</p>
-      <h1>Upload packet</h1>
-      <p className="muted">Drop the workbook and supporting PDF, or run the one-click demo. Nothing leaves your browser session except file-parsing requests to this server.</p>
+      <div className="stephead">
+        <p className="eyebrow">Step 1 of 4 · Packet</p>
+        <h2>What landed on your desk?</h2>
+        <p>Drop in the September files. The studio reads them deterministically — every number below is traced to its document.</p>
+      </div>
 
-      <div className="card" style={{ textAlign: "center" }}>
-        <button className="btn primary" disabled={loading} onClick={async () => { setNotice(null); await loadSample(); }}>
-          {loading ? "Loading sample packet..." : "Load sample packet"}
-        </button>
-        <p className="small muted" style={{ marginBottom: 0 }}>Loads the Greenline September 2026 workbook and supporting documents from the server.</p>
-        {(computed || audit.length > 0) && (
-          <div style={{ marginTop: 10 }}>
+      {!computed && (
+        <div className="hero">
+          <div
+            className={`hero-drop${over ? " over" : ""}`}
+            role="button"
+            tabIndex={0}
+            aria-label="Drop packet files here or activate to browse"
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") inputRef.current?.click(); }}
+            onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+            onDragLeave={() => setOver(false)}
+            onDrop={(e) => { e.preventDefault(); setOver(false); send([...e.dataTransfer.files]); }}
+          >
+            <IconUpload size={30} />
+            <h3>Drop the .xlsx and .pdf here</h3>
+            <p>or browse your files — or skip straight to the demo</p>
             <button
-              className="btn ghost small"
-              onClick={() => { if (window.confirm("Reset this session? The packet, answers, edits, and audit log will be cleared.")) { resetSession(); setNotice(null); } }}
+              className="btn-primary"
+              disabled={loading}
+              onClick={(e) => { e.stopPropagation(); setNotice(null); loadSample(); }}
             >
-              Reset session
+              {loading ? "Reading…" : "Load sample packet"}
             </button>
+            <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf" style={{ display: "none" }} onChange={(e) => send([...(e.target.files ?? [])])} />
           </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h2>Your files</h2>
-        <div
-          className={`dropzone${over ? " over" : ""}`}
-          role="button"
-          tabIndex={0}
-          aria-label="Drop packet files here or activate to browse"
-          onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") inputRef.current?.click(); }}
-          onDragOver={(e) => { e.preventDefault(); setOver(true); }}
-          onDragLeave={() => setOver(false)}
-          onDrop={(e) => { e.preventDefault(); setOver(false); send([...e.dataTransfer.files]); }}
-        >
-          Drop .xlsx and .pdf files here, or click to browse.
-          <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf" style={{ display: "none" }} onChange={(e) => send([...(e.target.files ?? [])])} />
+          {notice && <div className="alert error" style={{ marginTop: 12 }}>{notice}</div>}
+          {errors.length > 0 && <div className="alert error" style={{ marginTop: 12 }}>{errors.map((e, i) => <div key={i}>{e}</div>)}</div>}
         </div>
-        {notice && <div className="alert error" style={{ marginTop: 12 }}>{notice}</div>}
-        {errors.length > 0 && (
-          <div className="alert error" style={{ marginTop: 12 }}>
-            {errors.map((e, i) => <div key={i}>{e}</div>)}
-          </div>
-        )}
-        <div style={{ marginTop: 12 }}>
-          {EXPECTED.map((f) => {
-            const isMissing = missing.includes(f.key);
-            const loaded = computed && (f.key === "workbook" ? computed.proposal.ties.length > 0 : true);
-            return (
-              <div key={f.key} style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 0" }}>
-                <span className={`badge ${computed && !isMissing ? "ok" : "notbooked"}`}>{computed && !isMissing ? "Loaded" : "Missing"}</span>
-                <span>{f.label}</span>
-                {loaded && computed && !isMissing && <span className="small muted">ready</span>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {computed && (
-        <div className="card">
-          <h2>Extraction summary and tie-outs</h2>
-          <div className="tablewrap">
-            <table className="data">
-              <thead>
-                <tr><th>Check</th><th className="num">Expected</th><th className="num">Actual</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                {computed.proposal.ties.map((t) => (
-                  <tr key={t.label}>
-                    <td>{t.label}</td>
-                    <td className="num">{t.expected.toLocaleString()}</td>
-                    <td className="num">{t.actual.toLocaleString()}</td>
-                    <td><span className={`badge ${t.ok ? "ok" : "bad"}`}>{t.ok ? "OK" : "Off"}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          <div className="panel" aria-live="polite">
+            <p className="eyebrow">{reading ? "Reading the packet…" : "Packet read"}</p>
+            {FILES.map((f, i) => {
+              const miss = missing.includes(f.key);
+              const on = i < revealed && !miss;
+              return (
+                <div className="file-row" key={f.key}>
+                  <span className={`tick${on ? " on" : ""}`}><IconCheck size={14} /></span>
+                  <IconFile size={18} />
+                  <div>
+                    <div className="row-main">{f.label}</div>
+                    <div className="row-sub" style={{ margin: 0, textAlign: "left" }}>{miss ? "missing — upload it to continue" : f.sub}</div>
+                  </div>
+                  {!miss && on && <span className="row-sub">parsed</span>}
+                </div>
+              );
+            })}
+            {ties.slice(0, Math.max(0, revealed - FILES.length)).map((t) => (
+              <div className="tie-row" key={t.label}>
+                <span className="tick on"><IconCheck size={14} /></span>
+                <div>
+                  <div className="row-main">{t.label}</div>
+                  <div className="row-sub" style={{ margin: 0, textAlign: "left" }}>expected {t.expected.toLocaleString()} · documents {t.actual.toLocaleString()}</div>
+                </div>
+                <span className="badge ok">Ties</span>
+              </div>
+            ))}
+            {!reading && (
+              <div className="summary-strip">
+                <div className="stat-trio" style={{ flex: 1 }}>
+                  <div className="stat"><div className="v">{booked}</div><div className="k">entries drafted</div></div>
+                  <div className="stat"><div className="v">{checked}</div><div className="k">checked, left alone</div></div>
+                  <div className="stat"><div className="v">{flags}</div><div className="k">decisions for you</div></div>
+                </div>
+              </div>
+            )}
+            {!reading && (
+              <div className="summary-strip">
+                <Link href="/entries" className="btn-primary">Continue to entries <IconArrowR size={16} /></Link>
+                <button
+                  className="btn-ghost small"
+                  onClick={() => { if (window.confirm("Reset this session? The packet, answers, edits, and audit log will be cleared.")) resetSession(); }}
+                >
+                  <IconReset size={14} /> Reset session
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+          {notice && <div className="alert error">{notice}</div>}
+        </>
       )}
     </div>
   );

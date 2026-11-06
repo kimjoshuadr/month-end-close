@@ -38,5 +38,10 @@ export default defineConfig({
     { name: 'desktop', use: { browserName: 'chromium', channel: 'chrome', viewport: { width: 1440, height: 900 } } },
     { name: 'tablet', use: { browserName: 'chromium', channel: 'chrome', viewport: { width: 820, height: 1180 } } },
     { name: 'mobile', use: { browserName: 'chromium', channel: 'chrome', viewport: { width: 390, height: 844 } } },
+    {
+      name: 'reduced',
+      use: { browserName: 'chromium', channel: 'chrome', viewport: { width: 1440, height: 900 }, contextOptions: { reducedMotion: 'reduce' } },
+      testMatch: [/smoke/, /openitems/, /interactions/],
+    },
   ],
 });

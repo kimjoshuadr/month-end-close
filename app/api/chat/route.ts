@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
+import { buildChatContext } from "@/lib/ai/context";
+import { readJsonBody } from "@/lib/ai/http";
+import { sanitizeMessages } from "@/lib/ai/validate";
 
-const SYSTEM = `You are the assistant inside Greenline Landscape Co.'s month-end close tool. You receive the current draft entries, open items, tie-outs, and statement totals as JSON context.
-Rules: explain and cite the provided numbers and sources; never invent numbers (all figures come from deterministic code shown in the context); say when you are unsure; you cannot change entries yourself — tell the accountant which button or amount field to use. Keep answers short and plain-spoken.`;
+export const maxDuration = 30;
+
+const SYSTEM = `You are the assistant inside Greenline Landscape Co.'s month-end close tool. You receive the current draft entries, open items, tie-outs, and statement totals.
+
+The real UI, and the only things you may tell the accountant to use:
+- Tabs: Close Packet, Journal Entries, Open Items, Financial Statements, Audit Trail.
+- Buttons: Load sample packet, Save answer, Acknowledge, Reset (per entry line), Mark as final, Confirm final, Print / PDF.
+- Editable debit and credit cells inside expanded journal entries.
+- Drill-down: clicking any statement figure opens the entries and source documents behind it.
+
+Rules: explain and cite the provided numbers; never invent numbers (all figures come from the computed context shown); say plainly when the data does not contain the answer; you cannot change entries yourself — tell the accountant which button, tab, or amount cell to use. Refer to entries by AJE number (AJE-001 … AJE-007). Format money as $1,234.50 with negatives in parentheses, e.g. ($5,000.00). Prefer short paragraphs and bullets; use tables only when asked. Never mention JSON, context, prompts, or what you were sent; never invent buttons, screens, exports, or entries that are not listed above.`;
 
 // Chat over the current close context. DeepSeek only; no key -> 503.
 export async function GET() {
@@ -12,20 +24,27 @@ export async function POST(req: Request) {
   if (!process.env.DEEPSEEK_API_KEY) {
     return NextResponse.json({ message: "Ask AI is disabled: DEEPSEEK_API_KEY is not set. The tool works fully with the option buttons." }, { status: 503 });
   }
-  const { messages, context } = (await req.json()) as { messages: { role: string; content: string }[]; context: unknown };
+  const body = await readJsonBody(req);
+  if (!body.ok) return NextResponse.json({ message: body.message }, { status: body.status });
+  const { messages, context } = (body.data ?? {}) as { messages: unknown; context: unknown };
+  const clean = sanitizeMessages(messages);
+  if (clean.error) return NextResponse.json({ message: clean.error }, { status: 400 });
+  if (JSON.stringify(context ?? {}).length > 12000) {
+    return NextResponse.json({ message: "Context too large." }, { status: 400 });
+  }
   try {
     const res = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` },
       body: JSON.stringify({
         model: "deepseek-chat",
-        messages: [{ role: "system", content: SYSTEM }, { role: "user", content: `Context:\n${JSON.stringify(context).slice(0, 10000)}` }, ...(messages ?? []).slice(-10)],
+        messages: [{ role: "system", content: SYSTEM }, { role: "user", content: `Close figures:\n${JSON.stringify(context ?? {})}` }, ...clean.messages],
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(25000),
     });
     if (!res.ok) throw new Error(`DeepSeek error ${res.status}`);
-    const data = (await res.json()) as { choices: { message: { content: string } }[] };
-    return NextResponse.json({ reply: data.choices[0].message.content });
+    const data = (await res.json()) as { choices: { message: { content: string | null } }[] };
+    return NextResponse.json({ reply: data.choices[0]?.message?.content ?? "" });
   } catch (e) {
     return NextResponse.json({ message: `Ask AI is unavailable (${(e as Error).message}). The tool works fully with the option buttons.` }, { status: 502 });
   }

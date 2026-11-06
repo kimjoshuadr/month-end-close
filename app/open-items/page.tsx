@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { compute } from "../../lib/engine";
+import { MAX_QUESTION_CHARS } from "../../lib/ai/validate";
 import { isEditableTarget, nextShortcut, type ShortcutAction } from "../../lib/shortcuts";
 import type { Flag } from "../../lib/types";
 import { useStore } from "../../state/store";
+import { Markdown } from "../../components/Markdown";
 import { PageHeader, SummaryStrip } from "../../components/Shell";
 import { fmtDelta, fmtMoney } from "../../components/format";
 import { useToasts } from "../../components/Toasts";
@@ -41,8 +43,9 @@ function Detail({ flag, done, onAdvance, cmd, onCmd }: {
   const [pulse, setPulse] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [transcript, setTranscript] = useState<{ from: string; text: string }[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [transcript, setTranscript] = useState<{ from: string; text: string; error?: boolean; retryText?: string }[]>([]);
+  const [say, setSay] = useState("");
+  const sayOver = say.length > MAX_QUESTION_CHARS;
 
   const niFor = useMemo(() => {
     if (!packet || !computed) return {} as Record<string, number>;
@@ -105,16 +108,22 @@ function Detail({ flag, done, onAdvance, cmd, onCmd }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cmd]);
 
-  const send = async () => {
-    const say = (inputRef.current?.value ?? "").trim();
-    if (!say || busy) return;
+  const send = async (raw: string) => {
+    const text = raw.trim();
+    if (!text || text.length > MAX_QUESTION_CHARS || busy) return;
     setBusy(true);
-    if (inputRef.current) inputRef.current.value = "";
-    setTranscript((t) => [...t, { from: "You", text: say }]);
+    setSay("");
+    setTranscript((t) => [...t, { from: "You", text }]);
+    const ctl = new AbortController();
+    const timer = window.setTimeout(() => ctl.abort(), 30000);
     try {
-      const res = await fetch("/api/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ flagId: flag.id, text: say, options: flag.options }) });
-      const r = (await res.json()) as { option?: string; amount?: number; explanation: string };
-      setTranscript((t) => [...t, { from: "Studio", text: r.explanation }]);
+      const res = await fetch("/api/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ flagId: flag.id, text, options: flag.options }), signal: ctl.signal });
+      window.clearTimeout(timer);
+      if (!res.ok) throw new Error(`error ${res.status}`);
+      const r = (await res.json()) as { option?: string; amount?: number; explanation?: string; message?: string };
+      if (!res.ok || r.message) throw new Error(r.message || `error ${res.status}`);
+      const explanation = (r.explanation ?? "").trim() || "Noted.";
+      setTranscript((t) => [...t, { from: "Studio", text: explanation }]);
       if (r.option !== undefined) {
         setPulse(r.option);
         window.setTimeout(() => setPulse((p) => (p === r.option ? null : p)), 700);
@@ -133,8 +142,10 @@ function Detail({ flag, done, onAdvance, cmd, onCmd }: {
           setOverride("owner-transfer:1", r.amount);
         }
       }
-    } catch {
-      setTranscript((t) => [...t, { from: "You", text: say }, { from: "Studio", text: "Reply failed. Use the options above." }]);
+    } catch (e) {
+      window.clearTimeout(timer);
+      const why = e instanceof DOMException && e.name === "AbortError" ? "timed out" : (e as Error).message || "network error";
+      setTranscript((t) => [...t, { from: "Studio", text: `Reply failed (${why}). Use the options above, or retry.`, error: true, retryText: text }]);
     }
     setBusy(false);
   };
@@ -186,15 +197,28 @@ function Detail({ flag, done, onAdvance, cmd, onCmd }: {
             )}
             <label className="f" htmlFor={`c-${flag.id}`}>Comments / reply</label>
             <div className="replyrow" style={{ display: "flex", gap: 8 }}>
-              <input ref={inputRef} id={`c-${flag.id}`} type="text" placeholder="e.g. it was a loan…" aria-label={`Reply about ${flag.title}`} onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
-              <button className={`btn small${busy ? " loading" : ""}`} disabled={busy} onClick={send}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <input id={`c-${flag.id}`} type="text" placeholder="e.g. it was a loan… (max 1,000 chars)" aria-label={`Reply about ${flag.title}`} aria-describedby={`c-${flag.id}-count`} value={say} onChange={(e) => setSay(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(say); }} />
+                <div id={`c-${flag.id}-count`} className={`charcount${sayOver ? " over" : ""}`} aria-live="polite">
+                  {say.length.toLocaleString()} / {MAX_QUESTION_CHARS.toLocaleString()}{sayOver ? " — too long" : ""}
+                </div>
+              </div>
+              <button className={`btn small${busy ? " loading" : ""}`} disabled={busy || !say.trim() || sayOver} onClick={() => send(say)}>
                 {busy && <span className="spin" aria-hidden="true" />}
                 {busy ? "…" : "Send"}
               </button>
             </div>
             {(transcript.length > 0 || busy) && (
               <div className="transcript" aria-live="polite" style={{ background: "var(--canvas)", border: "1px solid var(--border-soft)", borderRadius: 4, padding: "8px 10px", marginTop: 8, fontSize: 12.5 }}>
-                {transcript.map((m, i) => <div key={i}><strong>{m.from}:</strong> {m.text}</div>)}
+                {transcript.map((m, i) => (
+                  <div key={i} className={m.error ? "msg assistant error" : undefined} style={m.error ? { margin: "4px 0" } : undefined}>
+                    <strong>{m.from}:</strong>{" "}
+                    {m.from === "Studio" && !m.error ? <Markdown text={m.text} /> : <span>{m.text}</span>}
+                    {m.error && m.retryText !== undefined && (
+                      <><br /><button className="btn small" onClick={() => send(m.retryText!)}>Retry</button></>
+                    )}
+                  </div>
+                ))}
                 {busy && <div className="typing" aria-label="Studio is replying"><i /><i /><i /></div>}
               </div>
             )}

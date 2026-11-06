@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { mapReply } from "@/lib/reply/mapReply";
-import type { FlagOption } from "@/lib/types";
+import { readJsonBody } from "@/lib/ai/http";
+import { sanitizeReplyInput } from "@/lib/ai/validate";
+
+export const maxDuration = 30;
 
 // Map a typed reply to an option/amount; DeepSeek only when keywords fail.
 export async function POST(req: Request) {
-  const { flagId, text, options } = (await req.json()) as { flagId: string; text: string; options: FlagOption[] };
-  if (typeof text !== "string" || !text.trim()) return NextResponse.json({ explanation: "Type a reply first." });
-  const mapped = mapReply(flagId, text, options ?? []);
+  const body = await readJsonBody(req);
+  if (!body.ok) return NextResponse.json({ message: body.message }, { status: body.status });
+  const clean = sanitizeReplyInput(body.data);
+  if (clean.error || !clean.input) return NextResponse.json({ message: clean.error ?? "Invalid input." }, { status: 400 });
+  const { flagId, text, options } = clean.input;
+  const mapped = mapReply(flagId, text, options);
   if (mapped.option !== undefined || mapped.amount !== undefined || !process.env.DEEPSEEK_API_KEY) {
     return NextResponse.json(mapped.option !== undefined || mapped.amount !== undefined ? mapped : { explanation: "Pick an option above." });
   }
@@ -18,17 +24,25 @@ export async function POST(req: Request) {
         model: "deepseek-chat",
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: `Map the accountant's reply to one of these option ids: ${(options ?? []).map((o) => o.id).join(", ")}. Return JSON {"option": id|null, "amount": number|null}.` },
-          { role: "user", content: text.slice(0, 2000) },
+          {
+            role: "system",
+            content: `You map an accountant's reply to one of these options for flag "${flagId}": ${options.map((o) => `${o.id} ("${o.label}")`).join(", ")}. Refer to journal entries by AJE number (AJE-001 … AJE-007) if relevant. Return JSON {"option": id|null, "amount": number|null, "explanation": string}. The explanation is one short plain sentence with no markdown. Never mention JSON or what you were sent.`,
+          },
+          { role: "user", content: text },
         ],
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(25000),
     });
     if (!res.ok) throw new Error(`DeepSeek error ${res.status}`);
-    const data = (await res.json()) as { choices: { message: { content: string } }[] };
-    const parsed = JSON.parse(data.choices[0].message.content) as { option?: string; amount?: number };
-    const valid = (options ?? []).some((o) => o.id === parsed.option);
-    return NextResponse.json({ option: valid ? parsed.option : undefined, amount: parsed.amount, explanation: "Interpreted with DeepSeek." });
+    const data = (await res.json()) as { choices: { message: { content: string | null } }[] };
+    const parsed = JSON.parse(data.choices[0]?.message?.content ?? "null") as { option?: string; amount?: number; explanation?: string };
+    const valid = options.some((o) => o.id === parsed.option);
+    const amount = typeof parsed.amount === "number" && Number.isFinite(parsed.amount) ? parsed.amount : undefined;
+    return NextResponse.json({
+      option: valid ? parsed.option : undefined,
+      amount,
+      explanation: typeof parsed.explanation === "string" && parsed.explanation.trim() ? parsed.explanation.trim() : "Interpreted with DeepSeek.",
+    });
   } catch (e) {
     return NextResponse.json({ explanation: `AI mapping unavailable (${(e as Error).message}). Pick an option above.` });
   }

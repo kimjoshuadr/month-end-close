@@ -73,6 +73,10 @@
 
 > "I'll confirm the contribution. The count drops and it moves to the next item."
 
+*Point at the toast in the bottom right.*
+
+> "Every save shows its net income effect, with Undo. Cmd+Z works too. Power users can work through this list from the keyboard: J and K to move, 1 to 3 to choose, Enter to save. Press ? to see all the shortcuts."
+
 *On Accounts payable support:*
 
 > "Accounts payable is 18,450, but only 8,960 is supported by invoices in the packet. The other 9,490 has no support, so the tool can't book or clear it. I'll acknowledge it as a request for the AP subledger."

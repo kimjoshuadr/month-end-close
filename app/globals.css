@@ -106,7 +106,7 @@ a { color: var(--blue-dark); }
 
 /* Global search */
 .gsearch { position: relative; width: 280px; flex-shrink: 1; min-width: 0; }
-.gsearch input {
+.gsearch input[type] {
   width: 100%; font: inherit; font-size: 12.5px;
   background: rgba(255,255,255,0.12); color: #fff;
   border: 1px solid rgba(255,255,255,0.25);

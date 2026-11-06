@@ -83,4 +83,13 @@ describe("compute answers and overrides", () => {
     expect(electric.lines[0].debit).toBe(2000);
     expect(electric.lines[1].credit).toBe(1250);
   });
+  it("confirming the default resolves the item with NI unchanged", async () => {
+    const p = await packet();
+    const before = compute(p, {}, {});
+    const after = compute(p, { "owner-transfer": { option: "contribution" } }, {});
+    expect(before.unresolved).toBe(7);
+    expect(after.unresolved).toBe(6);
+    expect(after.netIncomeAdj).toBe(before.netIncomeAdj);
+    expect(after.proposal.ajes.find((a) => a.id === "owner-transfer")?.assumed).toBe(false);
+  });
 });

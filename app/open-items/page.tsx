@@ -30,7 +30,6 @@ function Detail({ flag, done, onAdvance }: { flag: Flag; done: number; onAdvance
   const [busy, setBusy] = useState(false);
   const [transcript, setTranscript] = useState<{ from: string; text: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const saved = transcript.length > 0 && transcript[transcript.length - 1].from === "Studio saved";
 
   const niFor = useMemo(() => {
     if (!packet || !computed) return {} as Record<string, number>;
@@ -119,7 +118,7 @@ function Detail({ flag, done, onAdvance }: { flag: Flag; done: number; onAdvance
               ))}
             </div>
             {flag.kind === "decision" && (
-              <button className="btn primary small" onClick={save} disabled={pick === null && !saved}>Save answer</button>
+              <button className="btn primary small" onClick={save}>Save answer</button>
             )}
             <label className="f" htmlFor={`c-${flag.id}`}>Comments / reply</label>
             <div className="replyrow" style={{ display: "flex", gap: 8 }}>

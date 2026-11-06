@@ -115,6 +115,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   const unresolved = computed?.unresolved ?? 0;
   return (
     <div>
+      <header className="topnav">
       <div className="appbar">
         <span className="wordmark">Close Desk</span>
         <GlobalSearch />
@@ -130,6 +131,7 @@ function Frame({ children }: { children: React.ReactNode }) {
           </Link>
         ))}
       </nav>
+      </header>
       <main className="page">{children}</main>
       <DrillDown />
       {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}

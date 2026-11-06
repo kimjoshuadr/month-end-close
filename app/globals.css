@@ -58,10 +58,8 @@ a { color: var(--blue-dark); }
   align-items: center;
   gap: 14px;
   padding: 0 14px;
-  position: sticky;
-  top: 0;
-  z-index: 40;
 }
+.topnav { position: sticky; top: 0; z-index: 40; }
 .wordmark { font-family: var(--font-heading, Poppins, sans-serif); font-weight: 700; font-size: 15px; color: #fff; white-space: nowrap; }
 .entity {
   display: flex;
@@ -337,7 +335,7 @@ table.report tr.headerrow td { font-weight: 700; color: var(--navy); text-transf
 }
 
 @media print {
-  .appbar, .modtabs, .noprint, .overlay, .drawer { display: none !important; }
+  .topnav, .appbar, .modtabs, .noprint, .overlay, .drawer { display: none !important; }
   body { background: #fff; }
   .page { max-width: none; }
   .paper { border: none; }

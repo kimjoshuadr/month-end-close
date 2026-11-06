@@ -44,8 +44,12 @@ export function ChatDrawer({ onClose }: { onClose: () => void }) {
     const question = raw.trim();
     if (!question || question.length > MAX_QUESTION_CHARS || busy) return;
     setQ("");
-    // Error bubbles never go back to the API as history.
+    // Error bubbles never go back to the API as history. A retry of the same
+    // question does not duplicate it either.
     const history = msgs.filter((m) => !m.error).map((m) => ({ role: m.role, content: m.content }));
+    if (history.length > 0 && history[history.length - 1].role === "user" && history[history.length - 1].content === question) {
+      history.pop();
+    }
     setMsgs((m) => [...m, { role: "user", content: question }]);
     setBusy(true);
     const ctl = new AbortController();

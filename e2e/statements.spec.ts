@@ -60,6 +60,7 @@ test('R14 aug cutoff correction updates statements', async ({ page }) => {
   await page.goto('/open-items?sel=aug-cutoff');
   await page.getByRole('radio', { name: /correct via retained earnings/i }).check();
   await page.getByRole('button', { name: 'Save answer' }).click();
+  await expect(page.getByText('Answer saved: net income +1,017.50').first()).toBeVisible();
   expect(await stripNI(page)).toBe('$25,715.00');
   await page.goto('/statements');
   await expect(page.locator('.strip').getByText('0.00', { exact: true })).toBeVisible();

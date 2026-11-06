@@ -247,8 +247,12 @@ function Body() {
   // Keep the selection bar in view as it slides between rows.
   useEffect(() => {
     if (!selected) return;
+    const el = document.querySelector(`[data-flag="${selected}"]`);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= window.innerHeight) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document.querySelector(`[data-flag="${selected}"]`)?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
+    el.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
   }, [selected]);
 
   // j/k move, 1-3 choose, Enter saves. Ignored while typing.

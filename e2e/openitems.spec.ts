@@ -33,9 +33,11 @@ test('R9 answers change and return cleanly', async ({ page }) => {
   await page.goto('/open-items?sel=owner-transfer');
   await page.getByRole('radio', { name: /already correct as revenue/i }).check();
   await page.getByRole('button', { name: 'Save answer' }).click();
+  await expect(page.getByText('Answer saved: net income +5,000.00').first()).toBeVisible();
   expect(await stripNI(page)).toBe('$29,697.50');
   await page.getByRole('row', { name: /\$5,000 transfer/ }).click();
   await page.getByRole('radio', { name: /capital contribution/i }).check();
   await page.getByRole('button', { name: 'Save answer' }).click();
+  await expect(page.getByText('Answer saved: net income −5,000.00').first()).toBeVisible();
   expect(await stripNI(page)).toBe('$24,697.50');
 });

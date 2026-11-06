@@ -7,12 +7,13 @@ test('I1 undo restores NI after an answer', async ({ page }) => {
   await page.goto('/open-items?sel=owner-transfer');
   await page.getByRole('radio', { name: /already correct as revenue/i }).check();
   await page.getByRole('button', { name: 'Save answer' }).click();
+  await expect(page.getByText('Answer saved: net income +5,000.00').first()).toBeVisible();
   expect(await stripNI(page)).toBe('$29,697.50');
   await expect(page.getByRole('button', { name: 'Undo' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Undo' }).first().click();
   expect(await stripNI(page)).toBe('$24,697.50');
   await page.goto('/audit');
-  await expect(page.getByText(/Undo:/).first()).toBeVisible();
+  await expect(page.getByRole('row', { name: /Undo/ }).first()).toBeVisible();
 });
 
 // I2: j/k/1/Enter resolves an item without the mouse.
@@ -71,16 +72,16 @@ test('I5 all items resolved state', async ({ page }) => {
   await page.goto('/open-items');
   for (let i = 0; i < 7; i++) {
     if (await page.getByText('All items resolved').first().count() > 0) break;
-    const radios = page.getByRole('radio');
-    await radios.first().check({ timeout: 10000 });
+    // Decide before acting: info flags ack on click and auto-advance (remount),
+    // so use click() rather than check() — check() would re-resolve the radio
+    // on the new detail and cascade. Decision flags need an explicit Save.
     const save = page.getByRole('button', { name: 'Save answer' });
-    if (await save.count() > 0) {
+    const hasSave = (await save.count()) > 0;
+    await page.getByRole('radio').first().click({ timeout: 10000 });
+    if (hasSave) {
       await save.click();
-      await page.waitForTimeout(500);
-    } else {
-      // Info flags acknowledge on check and auto-advance.
-      await page.waitForTimeout(500);
     }
+    await expect(page.getByText(`${i + 1} of 7 resolved`).first()).toBeVisible({ timeout: 15000 });
   }
   await expect(page.getByText('All items resolved').first()).toBeVisible({ timeout: 30000 });
   await expect(page.getByRole('link', { name: /review financial statements/i })).toBeVisible();

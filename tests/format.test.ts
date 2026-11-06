@@ -14,3 +14,20 @@ describe("fmtWhole", () => {
     expect(fmtWhole(-5990)).toBe("(5,990)");
   });
 });
+
+describe("ajeNo", () => {
+  it("numbers entries AJE-001 through AJE-007 in stable order", async () => {
+    const { ajeNo } = await import("../components/format");
+    expect(ajeNo("prepaid")).toBe("AJE-001");
+    expect(ajeNo("depreciation")).toBe("AJE-002");
+    expect(ajeNo("payroll-accrual")).toBe("AJE-003");
+    expect(ajeNo("electric")).toBe("AJE-004");
+    expect(ajeNo("owner-transfer")).toBe("AJE-005");
+    expect(ajeNo("aug-cutoff")).toBe("AJE-006");
+    expect(ajeNo("northline")).toBe("AJE-007");
+  });
+  it("falls back to the raw id", async () => {
+    const { ajeNo } = await import("../components/format");
+    expect(ajeNo("mystery")).toBe("mystery");
+  });
+});

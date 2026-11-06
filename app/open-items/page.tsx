@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { compute } from "../../lib/engine";
 import type { Flag } from "../../lib/types";
 import { useStore } from "../../state/store";
@@ -24,7 +24,7 @@ function statusOf(flag: Flag, answers: Record<string, { option?: string; ack?: b
     : { cls: "unresolved", text: "Unresolved", done: false };
 }
 
-function Detail({ flag, done }: { flag: Flag; done: number }) {
+function Detail({ flag, done, onAdvance }: { flag: Flag; done: number; onAdvance: (excludeId: string) => void }) {
   const { computed, packet, answers, overrides, setAnswer, setOverride } = useStore();
   const [pick, setPick] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -51,6 +51,7 @@ function Detail({ flag, done }: { flag: Flag; done: number }) {
     setAnswer(flag.id, { ...answers[flag.id], option: effective });
     setTranscript((t) => [...t, { from: "Studio saved", text: `Answer recorded: ${flag.options.find((o) => o.id === effective)?.label}.` }]);
     setPick(null);
+    onAdvance(flag.id);
   };
 
   const send = async () => {
@@ -63,10 +64,13 @@ function Detail({ flag, done }: { flag: Flag; done: number }) {
       const r = (await res.json()) as { option?: string; amount?: number; explanation: string };
       setTranscript((t) => [...t, { from: "You", text: say }, { from: "Studio", text: r.explanation }]);
       if (r.option !== undefined) {
-        if (flag.kind === "info") setAnswer(flag.id, { ...answers[flag.id], ack: true });
-        else {
+        if (flag.kind === "info") {
+          setAnswer(flag.id, { ...answers[flag.id], ack: true });
+          onAdvance(flag.id);
+        } else {
           setAnswer(flag.id, { ...answers[flag.id], option: r.option });
           setPick(null);
+          onAdvance(flag.id);
         }
       }
       if (r.amount !== undefined && flag.id === "owner-transfer") {
@@ -102,7 +106,12 @@ function Detail({ flag, done }: { flag: Flag; done: number }) {
                     type="radio"
                     name={`flag-${flag.id}`}
                     checked={effective === o.id}
-                    onChange={() => (flag.kind === "info" ? setAnswer(flag.id, { ...answers[flag.id], ack: true }) : setPick(o.id))}
+                    onChange={() => {
+                      if (flag.kind === "info") {
+                        setAnswer(flag.id, { ...answers[flag.id], ack: true });
+                        onAdvance(flag.id);
+                      } else setPick(o.id);
+                    }}
                   />
                   <span>{o.label}{o.id === flag.defaultOption && !/default/i.test(o.label) ? " (default)" : ""}</span>
                   <span className="ni">NI ${fmtMoney(niFor[o.id] ?? 0)}</span>
@@ -151,6 +160,18 @@ function Body() {
   const flags = computed.proposal.flags;
   const done = flags.filter((f) => statusOf(f, answers).done).length;
   const active = flags.find((f) => f.id === selected) ?? null;
+
+  useEffect(() => {
+    if (selected === null && flags.length > 0) {
+      setSelected(flags.find((f) => !statusOf(f, answers).done)?.id ?? flags[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flags.length, selected]);
+
+  const advance = (excludeId: string) => {
+    const next = flags.find((f) => f.id !== excludeId && !statusOf(f, answers).done);
+    if (next) setSelected(next.id);
+  };
   return (
     <div>
       <PageHeader crumb="Open Items" title="Open Items — judgment needed" final={final} unresolved={computed.unresolved} />
@@ -181,7 +202,7 @@ function Body() {
           </table>
         </div>
       </div>
-      {active && <Detail key={active.id} flag={active} done={done} />}
+      {active && <Detail key={active.id} flag={active} done={done} onAdvance={advance} />}
     </div>
   );
 }

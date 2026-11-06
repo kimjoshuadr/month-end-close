@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { firstRowForAccount } from "../lib/trace";
 import { useStore } from "../state/store";
+import { ajeNo } from "./format";
 import { ChatDrawer } from "./ChatDrawer";
 import { DrillDown } from "./DrillDown";
 import { DrillProvider } from "./erp-ui";
@@ -37,7 +38,7 @@ function GlobalSearch() {
     const out: Hit[] = [];
     for (const a of computed.proposal.ajes) {
       if (a.title.toLowerCase().includes(t) || a.id.includes(t)) {
-        out.push({ kind: "Entry", id: a.id, label: `${a.id} · ${a.title}`, href: `/entries?sel=${a.id}` });
+        out.push({ kind: "Entry", id: a.id, label: `${ajeNo(a.id)} · ${a.title}`, href: `/entries?sel=${a.id}` });
       }
     }
     for (const f of computed.proposal.flags) {

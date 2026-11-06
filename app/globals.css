@@ -110,10 +110,10 @@ a { color: var(--blue-dark); }
   width: 100%; font: inherit; font-size: 12.5px;
   background: rgba(255,255,255,0.12); color: #fff;
   border: 1px solid rgba(255,255,255,0.25);
-  border-radius: var(--radius); padding: 6px 10px 6px 30px;
+  border-radius: var(--radius); padding: 6px 10px 6px 32px;
 }
 .gsearch input::placeholder { color: #9fb3cc; }
-.gsearch > svg { position: absolute; left: 9px; top: 8px; color: #9fb3cc; }
+.gsearch > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9fb3cc; pointer-events: none; }
 .gresults {
   position: absolute; top: 34px; left: 0; right: 0;
   background: var(--panel); color: var(--ink);

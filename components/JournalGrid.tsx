@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { buildProposal } from "../lib/engine/proposal";
 import type { Computed } from "../lib/types";
 import { useStore } from "../state/store";
-import { fmtMoney } from "./format";
+import { ajeNo, fmtMoney } from "./format";
 import { useDrill } from "./erp-ui";
 import { IconChevronR } from "./icons";
 
@@ -75,7 +75,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                       <span style={{ display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none" }}><IconChevronR size={13} /></span>
                     </button>
                   </td>
-                  <td className="mono">{a.id}</td>
+                  <td className="mono">{ajeNo(a.id)}</td>
                   <td><strong style={{ color: "var(--navy)" }}>{a.title}</strong></td>
                   <td><span className={`st ${a.status !== "booked" ? "notbooked" : a.assumed ? "assumed" : "booked"}`}>{a.status !== "booked" ? "Not booked" : a.assumed ? "Assumed" : "Booked"}</span></td>
                   <td className="num">{fmtMoney(dr)}</td>
@@ -88,7 +88,7 @@ export function JournalGrid({ computed, initialSel }: { computed: Computed; init
                     <td colSpan={8} style={{ background: "#f7fafd", padding: 0 }}>
                       <div style={{ padding: "12px 14px" }}>
                         <div className="hfields" style={{ marginBottom: 10 }}>
-                          <div className="hf"><div className="k">Entry #</div><div className="v mono">{a.id}</div></div>
+                          <div className="hf"><div className="k">Entry #</div><div className="v mono">{ajeNo(a.id)}</div></div>
                           <div className="hf"><div className="k">Date</div><div className="v">9/30/2026</div></div>
                           <div className="hf"><div className="k">Memo</div><div className="v">{a.title}</div></div>
                           <div className="hf"><div className="k">Status</div><div className="v">{a.status === "booked" ? (a.assumed ? "Booked · assumed" : "Booked") : "Not booked"}</div></div>
@@ -173,7 +173,7 @@ export function BridgeTable({ computed }: { computed: Computed }) {
               return booked.map((a) => {
                 const e = Math.round((niEffect(a.lines) + Number.EPSILON) * 100) / 100;
                 run = Math.round((run + e) * 100) / 100;
-                return <tr key={a.id}><td>{a.title}</td><td className="num">{fmtMoney(e)}</td><td className="num">{fmtMoney(run)}</td></tr>;
+                return <tr key={a.id}><td>{ajeNo(a.id)} · {a.title}</td><td className="num">{fmtMoney(e)}</td><td className="num">{fmtMoney(run)}</td></tr>;
               });
             })()}
           </tbody>

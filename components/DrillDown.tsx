@@ -4,6 +4,7 @@ import Link from "next/link";
 import { traceFor, type TraceKey } from "../lib/trace";
 import { useStore } from "../state/store";
 import { useDrill } from "./erp-ui";
+import { ajeNo } from "./format";
 import { IconX } from "./icons";
 
 // Drill-down side panel: entries and sources behind any figure.
@@ -12,6 +13,8 @@ export function DrillDown() {
   const { packet, computed } = useStore();
   if (!key) return null;
   const t = packet && computed ? traceFor(packet, computed, key as TraceKey) : null;
+  const entryId = key.kind === "entry" || key.kind === "aje-line" ? key.ajeId : undefined;
+  const title = t && entryId ? `${ajeNo(entryId)} · ${t.title}` : (t?.title ?? "Detail");
   const flagId = key.kind === "entry" || key.kind === "aje-line"
     ? computed?.proposal.ajes.find((a) => a.id === key.ajeId)?.flagId
     : t?.flag
@@ -23,7 +26,7 @@ export function DrillDown() {
         <header className="drawer-head">
           <div>
             <p className="eyebrow" style={{ margin: 0 }}>Drill-down</p>
-            <strong className="drawer-title">{t?.title ?? "Detail"}</strong>
+            <strong className="drawer-title">{title}</strong>
           </div>
           <button className="iconbtn" onClick={close} aria-label="Close drill-down" autoFocus><IconX /></button>
         </header>

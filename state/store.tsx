@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer 
 import { compute } from "../lib/engine";
 import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
 import { SESSION_KEY, createInitial, deserializeState, reducer, serializeState, type AuditEntry } from "./reducer";
+import { ajeNo } from "../components/format";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
 
@@ -67,7 +68,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setOverride = useCallback((key: string, n: number) => {
-    dispatch({ type: "override", key, value: n, msg: `Entry amount edited ${key} = ${n}` });
+    const i = key.lastIndexOf(":");
+    const shown = i > 0 ? `${ajeNo(key.slice(0, i))}:${key.slice(i + 1)}` : key;
+    dispatch({ type: "override", key, value: n, msg: `Entry amount edited ${shown} = ${n}` });
   }, []);
 
   const toggleFinal = useCallback(() => dispatch({ type: "toggle-final" }), []);

@@ -54,7 +54,16 @@ Month-End Close is a web tool in the style of an ERP console (Next.js and TypeSc
   - Statements round each line to whole dollars like the August PDF, so a total can be $1 off a hand re-foot.
   - Export is browser print to PDF.
   - There is no login.
-- **What I would build next:** a reviewer sign-off workflow, export to the GL (e.g. QuickBooks / NetSuite journal import), learning a client's recurring entries month to month, and support for more document layouts.
+- **What I would build next to make it a full close system** (what finance teams expect from NetSuite, Sage Intacct, BlackLine or FloQast):
+  - **Enforced maker-checker:** real logins with preparer, reviewer and approver roles, so the sign-off names are authenticated and a preparer can't approve their own entries. Today the names are typed.
+  - **Account reconciliations:** a workspace for bank, AP subledger and accrual reconciliations, with attachments, sign-off and roll-forward to next month. Today the tool runs tie-out checks but has no reconciliation records.
+  - **Close checklist and calendar:** close tasks with owners, due dates (e.g. close day 1 to 5), dependencies and status, with the open items feeding into it.
+  - **Period lock:** closing September so no one can change it after sign-off, with controlled reopen and an audit entry.
+  - **Database and history:** persistent storage per client, entity and period, so October starts from September's closing balances, reversing entries post automatically, and prior closes stay available.
+  - **Multi-entity and dimensions:** several clients and entities, departments or classes, and consolidation.
+  - **GL integration:** posting approved entries straight to QuickBooks or NetSuite through their APIs instead of a CSV import.
+  - **Learning recurring entries:** suggesting the same accruals, amortization and depreciation each month from history.
+  - **More document layouts:** hardening the parsers on real packets from several clients.
 - **What I'd need from you for production:**
   - Client data should live in an access-controlled store per client: encrypted, with role-based access for the assigned accountant and reviewer only, SSO, and retained audit logs.
   - It must never live in a browser session.

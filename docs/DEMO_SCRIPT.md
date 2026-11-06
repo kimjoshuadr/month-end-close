@@ -1,128 +1,121 @@
-# Walkthrough script: Month-End Close (about 5 minutes)
+# Walkthrough script: Month-End Close (about 6 minutes)
 
 **Links:** [Live tool](https://month-end-close.vercel.app) · [Code](https://github.com/kimjoshuadr/month-end-close) · [Sample packet files](https://github.com/kimjoshuadr/month-end-close/tree/main/samples) · [Write-up](https://github.com/kimjoshuadr/month-end-close/blob/main/docs/SUBMISSION.md)
 
-**Setup before recording**
-- Open https://month-end-close.vercel.app in Chrome at full width (1440px or wider), zoom 100%.
-- Have the three packet files ([download from the repo](https://github.com/kimjoshuadr/month-end-close/tree/main/samples)) in a Finder window: `01_Month_End_Workbook_Sep2026.xlsx`, `02_Supporting_Documents_Sep2026.pdf`, `03_Example_Financial_Statements_Aug2026.pdf`.
-- If a previous session is loaded, click **Reset session** on the Close Packet tab first.
-- **Bold** = what you click. *Italics* = what you point at. Quoted text = what you say.
+**Before recording**
+- Open https://month-end-close.vercel.app in Chrome, full width (1440px or wider), zoom 100%.
+- Download the three packet files from [samples/](https://github.com/kimjoshuadr/month-end-close/tree/main/samples) and keep them in a Finder window.
+- On the Close Packet tab, click **Reset session** if a previous session is loaded.
+- Have two names ready for the sign-off, e.g. "Kim Delos Reyes" and "Marisol Ontiveros".
+- Legend: **Bold** = click. *Italics* = point at. Quotes = say it.
 
 ---
 
-## 1. Intro (0:00 to 0:20)
-*Show the Close Packet tab, empty.*
+## 1. Intro (0:00–0:20)
+*Close Packet tab, empty.*
 
-> "Hi, I'm Kim. This is Month-End Close, a tool I built for the Greenline Landscape September 2026 close. It reads the month-end packet, drafts the adjusting entries, flags anything the documents don't settle, and produces the September financial statements in the same format as the August package. The accountant answers the flags and edits entries, and everything updates live."
+> "Hi, I'm Kim. This is Month-End Close, the tool I built for the Greenline Landscape September close. It reads the month-end packet, drafts the adjusting entries with a source on every line, flags what the documents don't settle, and produces the September statements in your August format. The accountant makes the judgment calls, and everything updates live."
 
-## 2. Upload and tie-outs (0:20 to 1:00)
-*Drag the workbook onto the Workbook row, then the supporting PDF (and the August PDF) onto the Supporting PDF row.*
+## 2. Upload and tie-outs (0:20–1:00)
+*Drag the workbook onto the Workbook row, then the supporting PDF and the August PDF onto the Supporting PDF row.*
 
-> "I'll upload the packet: the workbook with the trial balance, payroll register and schedules, and the PDF with the bank statement, vendor invoices and Dana's email."
+> "I'll upload the packet: the workbook with the trial balance, payroll register and schedules, and the PDF with the bank statement, invoices and Dana's email."
 
-*Point at the Validation and tie-outs grid.*
+*Point at Validation and tie-outs.*
 
-> "Before drafting anything, the tool ties the documents back to the trial balance. The bank ending balance matches cash at 84,320. The two Gusto payroll debits match the register. Materials and Fuel tie exactly to the bank payments plus the Green Valley and Summit invoices, which tells me those invoices are already booked. And the loan principal of 1,640 ties to the change in the loan balance."
+> "Before drafting anything, it ties the documents to the trial balance. Bank matches cash at 84,320. The two Gusto payroll debits match the register. Materials and Fuel tie exactly to the bank payments plus the Green Valley and Summit invoices, which is how it knows those invoices are already booked. And the loan principal of 1,640 ties to the change in the loan."
 
 *Point at the summary strip.*
 
-> "This strip stays on every page: unadjusted net income 38,200, adjusted 24,697.50, debits equal credits, and seven items still open."
+> "This strip is on every page: 38,200 unadjusted, 24,697.50 adjusted, debits equal credits, seven items open."
 
-## 3. Journal entries (1:00 to 1:50)
-**Click Journal Entries.**
+## 3. Journal entries (1:00–1:50)
+**Click Journal Entries.** **Expand AJE-003.**
 
-> "Here's the draft adjusting entry schedule."
+> "Five drafted entries. Prepaid insurance, 1,800, from the schedule. Depreciation, 2,400. The payroll accrual, 3,052.50: the next pay period starts September 26, so the 28th to the 30th is 3 of 10 working days, plus 10% tax. Every line cites its source, and it's marked to auto-reverse on October 1, like it would in an ERP."
 
-**Expand AJE-001**, then scroll through the list.
+*Point at AJE-004, then the orange Assumed badge on AJE-005.*
 
-> "Prepaid insurance, 1,800, straight from the schedule, which shows September wasn't recorded. Depreciation, 2,400, from the fixed asset schedule. Accrued payroll, 3,052.50: the next pay period starts September 26, so the 28th to the 30th is 3 of 10 working days, plus 10% employer tax. The Lakeside electric bill, 1,250, is September service that never got recorded; Dana's email confirms it. Every line cites its source document, and every entry balances."
+> "The Lakeside electric bill, 1,250, is September service that was never recorded; Dana's email confirms it. AJE-005 moves the 5,000 transfer out of revenue. It's marked Assumed because it's a judgment call; I'll come back to it."
 
-*Point at AJE-005 with the orange Assumed badge.*
+*Scroll to Net income bridge and Checked, no entry needed.*
 
-> "AJE-005 reclasses the 5,000 transfer out of revenue into owner contributions. It's marked Assumed because it's a judgment call, and I'll come back to it."
+> "The bridge shows each entry's effect. And here's what it deliberately did not book: Green Valley and Summit are already in the trial balance, and the Northline rental is October, so it's out of period."
 
-*Scroll to Net income bridge, then Checked, no entry needed.*
+## 4. Edit a value, and undo (1:50–2:10)
+*In AJE-004, change the debit and the credit to 2,000 (Enter after each).*
 
-> "The bridge shows each entry's effect, from 38,200 down to 24,697.50. And this section shows what the tool deliberately did not book: Green Valley and Summit are already in the trial balance, and the Northline rental is for October, so it's out of period."
+> "Any amount can be edited. Change the electric bill to 2,000 and net income drops 750 straight away; you can see the change on the strip."
 
-## 4. Edit a value (1:50 to 2:10)
-**Expand AJE-004**, change the debit and the credit to **2,000**.
+*Point at the toast, click **Undo**.*
 
-> "The accountant can adjust any amount. If I change the electric bill to 2,000, adjusted net income drops by 750 straight away, and the entry still balances."
+> "Every change can be undone."
 
-**Click Reset** on both lines.
-
-> "Reset puts it back."
-
-## 5. Open items (2:10 to 3:20)
+## 5. Open items (2:10–3:20)
 **Click Open Items.**
 
-> "This is the worklist: everything the documents don't settle. Nothing here is guessed silently."
+> "This is the worklist: everything the documents don't settle. Nothing is guessed silently."
 
-*The $5,000 transfer is selected. Point at the evidence.*
+*The $5,000 transfer is selected.*
 
-> "The 5,000 transfer on September 12. The bank shows it came from account 4471, and Dana says it was her own money covering payroll. The default is a capital contribution. The accountant can answer with a button or just type."
+> "The 5,000 transfer on September 12. The bank shows it came from account 4471, and Dana says it was her own money covering payroll. Each option shows its effect on net income."
 
-*Type* `it was a loan from Dana` *and **click Send**.*
+*Type* `it was a loan from Dana` **→ Send.**
 
-> "If I type 'it was a loan from Dana', it picks Loan from owner. That needs a new account, 2600, which isn't in the trial balance, so the tool labels it as requiring approval instead of quietly adding it."
+> "I can just type: 'it was a loan from Dana'. It picks Loan, and because that needs account 2600, which isn't in the trial balance, it says it needs approval instead of quietly adding it."
 
-**Select Already correct as revenue.**
+**Select Capital contribution (default) → Save answer.**
 
-> "If it really was revenue, net income goes to 29,697.50."
+> "I'll confirm the contribution. It saves, shows the effect, and moves on."
 
-**Select Capital contribution (default), then click Save answer.**
+*Accounts payable support:* **Acknowledge (default) → Save answer.**
 
-> "I'll confirm the contribution. The count drops and it moves to the next item."
+> "18,450 of payables, but only 8,960 is supported by invoices in the packet. I'll acknowledge it as a request for the AP subledger."
 
-*Point at the toast in the bottom right.*
+*Press* `j`, `1`, `Enter` *on the next items.*
 
-> "Every save shows its net income effect, with Undo. Cmd+Z works too. Power users can work through this list from the keyboard: J and K to move, 1 to 3 to choose, Enter to save. Press ? to see all the shortcuts."
+> "Power users can work from the keyboard: J and K to move, a number to choose, Enter to save. The question mark shows all shortcuts."
 
-*On Accounts payable support:*
+*Resolve the remaining items until "All items resolved".*
 
-> "Accounts payable is 18,450, but only 8,960 is supported by invoices in the packet. The other 9,490 has no support, so the tool can't book or clear it. I'll acknowledge it as a request for the AP subledger."
+## 6. Statements (3:20–4:20)
+**Click Financial Statements.** Step through **Cover**, **Income Statement — month**, **Income Statement — YTD**, **Balance Sheet**, **Cash Flows**, **Trailing Twelve Months**.
 
-**Click Acknowledge** (Save answer if shown).
+> "The September package in the August format: income statement for the month against last September with percent of revenue, year to date, and trailing twelve months. Opening balances and prior-year numbers come from the August package, so it ties."
 
-*Briefly point at the August payroll cutoff and Northline items.*
+*Balance Sheet:* "Total assets 231,120, and it balances."
+*Cash Flows:* "It ends at 84,320, exactly the bank balance."
 
-> "The others are the same kind of call: one day of August payroll that was expensed in September, and whether to accrue the October rental."
+*Income Statement — month:* **click the Utilities figure.**
 
-## 6. Financial statements (3:20 to 4:20)
-**Click Financial Statements.** Step through the tabs: **Cover**, **Income Statement — month**, **Income Statement — YTD**, **Balance Sheet**, **Cash Flows**, **Trailing Twelve Months**.
+> "Every number drills down. Utilities shows the Lakeside entry and the bank line behind it."
 
-> "The September package follows the August format: a cover, the income statement for the month against September last year with percent of revenue, and year to date. Prior-year numbers and opening balances come from the August package, so it ties."
+## 7. Flux review (4:20–4:50)
+**Click Flux Review.**
 
-*On Balance Sheet:*
+> "Like a real close, it reviews the movements: each line against August and against last September. Six lines moved by more than 1,000 dollars and 10 percent, like Materials up 26 percent on last year and Repairs down 32 percent on August, and each needs an explanation before the package can be finalized."
 
-> "Total assets 231,120, and it balances."
+*Type a short explanation on Materials, e.g.* `Peak season; Green Valley pavers and sod for Parkside job` *and fill the rest.*
 
-*On Cash Flows:*
+## 8. Sign-off and exports (4:50–5:30)
+**Click Mark as final.**
 
-> "The cash flow ends at 84,320, exactly the bank balance."
+> "Finalizing is blocked until every item is answered and every flux line is explained. Then it asks who prepared and who reviewed it; they have to be different people. There's no login in this demo, so it says the names are typed, not authenticated."
 
-*On Income Statement — month,* **click the Utilities figure.**
+*Enter the two names →* **Confirm final**. *Show the names on the Cover.*
 
-> "Any number drills down. Utilities shows the Lakeside entry and the bank line behind it."
+**Click Export to Excel**, then on Journal Entries **Export JE import (CSV)**.
 
-*Point at the Draft ribbon and the Reviewer notes box.*
+> "The statements export to Excel, and the entries export as a journal import file for NetSuite or QuickBooks, with the reversal dates. Nothing is ever sent to the client from here."
 
-> "It stays a draft while items are open. The accountant can leave reviewer notes, and nothing is ever sent to the client."
+## 9. Ask AI and audit trail (5:30–5:50)
+**Click Ask AI** → `Why wasn't the Green Valley invoice booked?`
 
-## 7. Change an input, see it update (4:20 to 4:40)
-**Click Open Items**, select **August payroll cutoff**, choose **Correct via retained earnings**, **Save answer**, then **click Financial Statements**.
+> "The assistant explains entries from the current data. It can't change numbers, and it ignores instructions hidden in documents; I tested that with a booby-trapped packet."
 
-> "If I change an answer, say I correct the August payroll day through retained earnings, net income moves to 25,715 and the balance sheet still balances."
+**Close it → Audit Trail.**
 
-## 8. Ask AI and the audit trail (4:40 to 5:00)
-**Click Ask AI** and ask: `Why wasn't the Green Valley invoice booked?`
+> "And every upload, answer, edit and sign-off is logged here."
 
-> "The assistant explains the entries using the current data, but it can't change any numbers."
-
-**Close it, then click Audit Trail.**
-
-> "And every upload, answer and edit is logged here."
-
-## 9. Close (5:00 to 5:15)
-> "To sum up: all the numbers come from deterministic rules and are covered by tests, with 65 unit tests and 108 browser tests at three screen sizes. AI helps read documents it can't parse, interprets typed answers, and explains. The accountant makes the judgment calls. Thanks for watching."
+## 10. Close (5:50–6:10)
+> "To sum up: the numbers come from deterministic rules, covered by 125 unit tests and 222 browser tests mapped to your brief. AI reads what the rules can't, interprets typed answers, and explains. The accountant makes the judgment calls and signs off. Thanks for watching."

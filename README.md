@@ -14,6 +14,7 @@
 2. **Journal Entries:** five drafted entries, from unadjusted net income of $38,200 to $24,697.50, each line citing its document.
 3. **Open Items:** answer the seven flags with buttons, a typed reply ("it was a loan from Dana") or the keyboard (`j`/`k`, `1`–`3`, `Enter`). Undo with `⌘Z`.
 4. **Financial Statements:** cover, income statement (month, YTD, trailing twelve months), balance sheet and cash flows in the firm's August format. Click any figure to drill into its entries and sources.
+5. **Close review:** the Flux Review tab flags lines that moved ≥ $1,000 and ≥ 10% for an explanation; **Mark as final** needs a preparer and a different reviewer; export a journal-import CSV (with auto-reverse dates on accruals) and an Excel statement package.
 
 ![Answering a flag updates net income, entries and statements live](docs/media/demo.gif)
 
@@ -52,7 +53,7 @@ flowchart LR
 ```
 
 - **Numbers never come from an LLM.** `lib/engine` is pure functions: `compute(packet, answers, overrides)` re-derives every entry and statement on each change.
-- **AI is used where it helps:** a fallback for documents the parsers can't read, turning a typed answer into a choice, and an assistant that explains entries using the current data. Its output is rendered through a safe markdown renderer, and requests are validated and rate-limited on the server.
+- **AI is used where it helps:** a fallback for documents the parsers can't read, turning a typed answer into a choice, and an assistant that explains entries using the current data. Its output is rendered through a safe markdown renderer; requests are validated, rate-limited and token-capped; document text is passed as data, never instructions; red-team and prompt-injection tests are in the [security review](docs/SECURITY_REVIEW.md).
 - **No database.** State lives in the browser session; nothing is stored server-side. See the write-up for what production would need.
 
 **Stack:** Next.js 15 (App Router) and TypeScript, SheetJS and unpdf for parsing, DeepSeek API, Vitest and Playwright, deployed on Vercel (a Dockerfile is included for self-hosting).
@@ -61,7 +62,7 @@ flowchart LR
 
 I worked as the orchestrator in Claude Code, with Muse Spark 1.3 Contributor (via OpenCode) as the executor writing the code. Before any code, I worked through the packet by hand and turned the expected results into tests. The process is documented in [`docs/`](docs/README.md): design specs, the implementation plan, the redesigns, and the QA and security reviews.
 
-**Quality:** unit tests for the engine, parsers, state, markdown and security helpers, plus a Playwright suite that maps each requirement in the brief to a test at desktop, tablet and mobile widths, with a reduced-motion run. Run it against the live site with `E2E_BASE_URL=https://month-end-close.vercel.app npm run e2e`.
+**Quality:** 125 unit tests (engine, parsers, state, markdown, security helpers) and 222 Playwright tests that maps each requirement in the brief to a test at desktop, tablet and mobile widths, with a reduced-motion run. Run it against the live site with `E2E_BASE_URL=https://month-end-close.vercel.app npm run e2e`.
 
 ## Run locally
 

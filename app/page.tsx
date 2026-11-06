@@ -22,6 +22,9 @@ export default function PacketPage() {
   const [over, setOver] = useState<string | null>(null);
   const [invalid, setInvalid] = useState<{ key: string; msg: string; n: number } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Files dropped so far; the packet is built once every required file is in.
+  const [staged, setStaged] = useState<File[]>([]);
+  const [waiting, setWaiting] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputKey = useRef<string | null>(null);
 
@@ -38,12 +41,20 @@ export default function PacketPage() {
     }
     setInvalid(null);
     setNotice(null);
-    const r = await upload(files);
-    if (!r.ok) {
-      const missing = r.missing.length > 0 ? ` Missing: ${r.missing.join(", ")}.` : "";
-      setNotice(`Packet incomplete.${missing} ${r.errors.join(" ")}`);
+    const next = [...staged.filter((s) => !files.some((f) => f.name === s.name)), ...files];
+    setStaged(next);
+    const r = await upload(next);
+    if (r.ok) {
+      setStaged([]);
+      setWaiting([]);
+    } else if (r.errors.length === 0) {
+      setWaiting(r.missing);
+    } else {
+      setWaiting([]);
+      setNotice(`These files could not be read. ${r.errors.join(" ")}`);
     }
   };
+  const label = (key: string) => EXPECTED.find((f) => f.key === key)?.label ?? "schedules (payroll, prepaid, fixed assets)";
 
   const browse = (key: string) => {
     inputKey.current = key;
@@ -80,6 +91,7 @@ export default function PacketPage() {
         <div className="panel-h">Source files</div>
         {EXPECTED.map((f) => {
           const isMissing = !computed || missing.includes(f.key);
+          const received = isMissing && staged.length > 0 && !missing.includes(f.key);
           return (
             <div key={f.key} className="urow">
               <IconDoc size={18} />
@@ -87,7 +99,7 @@ export default function PacketPage() {
                 <strong style={{ color: "var(--navy)" }}>{f.label}</strong>
                 <div className="small muted">{f.hint}</div>
               </div>
-              <span className={`st ${computed && !isMissing ? "ok" : "unresolved"}`}>{computed && !isMissing ? "Loaded" : "Missing"}</span>
+              <span className={`st ${(computed && !isMissing) || received ? "ok" : "unresolved"}`}>{computed && !isMissing ? "Loaded" : received ? "Received" : "Missing"}</span>
               <div
                 key={invalid?.key === f.key ? `invalid-${invalid.n}` : `ok-${f.key}`}
                 className={`dropmini${over === f.key ? " over" : ""}${invalid?.key === f.key ? " invalid" : ""}`}
@@ -118,6 +130,7 @@ export default function PacketPage() {
         })}
         <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf,.txt,.csv" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])], inputKey.current); e.target.value = ""; }} />
         {invalid && <div style={{ padding: "0 14px 12px" }}><div className="alert error" role="alert" key={invalid.n} style={{ margin: 0 }}>{invalid.msg}</div></div>}
+        {waiting.length > 0 && <div style={{ padding: "0 14px 12px" }}><div className="alert info" role="status" style={{ margin: 0 }}>Received {staged.map((f) => f.name).join(", ")}. Now add the {waiting.map(label).join(" and ")} to build the packet.</div></div>}
         {notice && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{notice}</div></div>}
         {errors.length > 0 && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{errors.map((e, i) => <div key={i}>{e}</div>)}</div></div>}
       </div>

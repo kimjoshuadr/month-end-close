@@ -53,3 +53,5 @@ R13 change (orchestrator-approved): "Mark as final" now opens a Prepared/Reviewe
 - R17 disabled case stubs `GET /api/chat` to `{enabled:false}` because `.env.local` carries a key; the live `@ai` test makes one real short call. No key material is printed or committed.
 - Screenshots: `docs/screenshots/qa/` (per route × viewport, taken by layout.spec). The suite rebuilds the app via webServer on each run.
 - Docker-on-Coolify is out of Playwright scope and NOT yet verified (no Docker locally); verify on first Coolify deploy. The write-up was checked against sections 2-4 of the instructions by hand.
+
+- R2d (added after user report): dropping one file no longer errors with "Packet incomplete"; files are held until both required files are in, with a "Now add the ..." status. R2b now asserts that message explicitly (stricter than the old /missing/ match).

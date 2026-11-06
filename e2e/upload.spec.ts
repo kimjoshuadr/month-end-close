@@ -64,9 +64,10 @@ test('R2b txt supporting text and csv TB are classified', async ({ page }) => {
   const csv = tmp('tb.csv', TB_CSV);
   await page.goto('/');
   await page.locator('input[type="file"]').setInputFiles([txt, csv]);
-  await expect(page.getByText(/packet incomplete|missing/i).first()).toBeVisible({ timeout: 30000 });
-  await expect(page.getByText('Workbook', { exact: false }).first()).toBeVisible();
-  await expect(page.getByText('schedules', { exact: false }).first()).toBeVisible();
+  // Both files are classified; the CSV TB has no schedules, so the tool asks for them instead of erroring.
+  await expect(page.getByText(/Received .*support\.txt.*tb\.csv|Received .*tb\.csv.*support\.txt/i)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Now add the schedules/i)).toBeVisible();
+  await expect(page.locator('.alert.error')).toHaveCount(0);
 });
 
 // R2b (negative): unrelated txt gets a clear error.
@@ -137,4 +138,18 @@ test('R3 validation grid ties out', async ({ page }) => {
     await expect(row).toContainText('OK');
   }
   await expect(grid.getByRole('row')).toHaveCount(6); // header + 5 checks
+});
+
+test('R2d one file at a time: waits for the second file, then builds the packet', async ({ page }) => {
+  await page.goto('/');
+  const input = page.locator('input[type="file"]');
+  await input.setInputFiles(WB);
+  await expect(page.getByText(/Now add the Supporting PDF/i)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Packet incomplete/i)).toHaveCount(0);
+  await expect(page.locator('.alert.error')).toHaveCount(0);
+  await expect(page.getByText('Received', { exact: true })).toBeVisible();
+  await input.setInputFiles(SUP);
+  await expect(page.getByText('Validation and tie-outs')).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText('$24,697.50').first()).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Now add the/i)).toHaveCount(0);
 });

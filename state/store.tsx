@@ -69,7 +69,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const r = await postFiles(files.map((f) => ({ name: f.name, blob: f })));
     dispatch({ type: "set-upload", missing: r.missing, errors: r.errors });
     if (r.packet) dispatch({ type: "packet-loaded", packet: r.packet, msg: `Uploaded ${files.map((f) => f.name).join(", ")}` });
-    else dispatch({ type: "log", msg: `Upload rejected: ${r.errors.join("; ") || r.missing.join(", ")}` });
+    else dispatch({ type: "log", msg: r.errors.length ? `Upload rejected: ${r.errors.join("; ")}` : `Received ${files.map((f) => f.name).join(", ")}; waiting for ${r.missing.join(", ")}` });
     return { ok: !!r.packet, missing: r.missing, errors: r.errors };
   }, []);
 

@@ -90,7 +90,7 @@ const BS_ACCTS: Record<string, number[]> = {
 
 const OPEX_LABELS = ["Wages", "Materials", "Subcontractors", "Rent", "Fuel", "Utilities", "Repairs & Maintenance", "Payroll Taxes", "Insurance", "Software & Subscriptions", "Professional Fees", "Bank Fees"];
 
-function acctsForStatement(table: TraceKey & { kind: "statement" }): number[] {
+export function acctsForStatement(table: TraceKey & { kind: "statement" }): number[] {
   const { label } = table;
   if (table.table === "bs") return BS_ACCTS[label] ?? [];
   if (table.table === "cf") {
@@ -121,6 +121,22 @@ function acctNos(labels: string[]): number[] {
 
 function acctName(p: Packet, no: number): string {
   return p.tb.find((r) => r.no === no)?.name ?? (no === 2600 ? "Owner Loan" : `Account ${no}`);
+}
+
+export type StatementRef = { table: "isMonth" | "isYtd" | "bs" | "cf"; label: string };
+
+// First statement row driven by a TB account, for account drill-down.
+export function firstRowForAccount(computed: Computed, acct: number): StatementRef | null {
+  const order: StatementRef["table"][] = ["isMonth", "bs", "cf", "isYtd"];
+  for (const table of order) {
+    for (const row of computed.statements[table].rows) {
+      if (row.kind === "header" || row.values.length === 0) continue;
+      if (acctsForStatement({ kind: "statement", table, label: row.label }).includes(acct)) {
+        return { table, label: row.label };
+      }
+    }
+  }
+  return null;
 }
 
 // Trace any computed figure back to entries, sources, rule, and flag.

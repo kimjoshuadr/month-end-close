@@ -1,133 +1,144 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { firstRowForAccount } from "../lib/trace";
 import { useStore } from "../state/store";
 import { ChatDrawer } from "./ChatDrawer";
-import { AuditDrawer, TraceDrawer } from "./drawers";
-import { IconChat, IconCheck, IconClock, IconLock, IconMenu, IconX } from "./icons";
-import { LivePreview, PreviewBar } from "./LivePreview";
-import { UIProvider, useUI } from "./studio";
+import { DrillDown } from "./DrillDown";
+import { DrillProvider } from "./erp-ui";
+import { IconChat, IconDoc } from "./icons";
+import { SummaryStrip } from "./SummaryStrip";
 
-const STEPS = [
-  { href: "/", label: "Packet read", short: "Packet" },
-  { href: "/entries", label: "Entries drafted", short: "Entries" },
-  { href: "/decisions", label: "Your decisions", short: "Decide" },
-  { href: "/statements", label: "Statements", short: "File" },
+const TABS = [
+  { href: "/", label: "Close Packet" },
+  { href: "/entries", label: "Journal Entries" },
+  { href: "/open-items", label: "Open Items", badge: true },
+  { href: "/statements", label: "Financial Statements" },
+  { href: "/audit", label: "Audit Trail" },
 ];
 
-function stepState(href: string, pathname: string, loaded: boolean, unresolved: number, final: boolean): "done" | "current" | "todo" | "locked" {
-  if (!loaded && href !== "/") return "locked";
-  if (href === "/decisions" && unresolved === 0 && loaded) return "done";
-  if (href === "/statements" && final) return "done";
-  if (href === "/" && loaded) return "done";
-  if (href === "/entries" && loaded) return "done";
-  if (pathname === href || (href !== "/" && pathname.startsWith(href))) return "current";
-  if (pathname === href) return "current";
-  return "todo";
-}
+type Hit =
+  | { kind: "Entry"; id: string; label: string; href: string }
+  | { kind: "Flag"; id: string; label: string; href: string }
+  | { kind: "Account"; id: string; label: string; href: string };
 
-function Rail() {
-  const pathname = usePathname();
-  const { computed, final } = useStore();
-  const loaded = !!computed;
-  const unresolved = computed?.unresolved ?? 7;
-  const [open, setOpen] = useState(false);
-  return (
-    <nav className={`rail${open ? " open" : ""}`} aria-label="Close steps">
-      <div className="rail-brand">
-        <div>
-          <p className="eyebrow light">Month-end close</p>
-          <p className="wordmark">Close Desk</p>
-        </div>
-        <button className="menubtn" aria-expanded={open} aria-controls="railsteps" onClick={() => setOpen((o) => !o)}>
-          {open ? <IconX /> : <IconMenu />}<span className="sr">Steps</span>
-        </button>
-      </div>
-      <ol className="rail-steps" id="railsteps">
-        {STEPS.map((s, i) => {
-          const st = stepState(s.href, pathname, loaded, unresolved, final);
-          const active = pathname === s.href;
-          return (
-            <li key={s.href} className={`step ${st}${active ? " active" : ""}`}>
-              {st === "locked" ? (
-                <span className="step-link" aria-disabled="true">
-                  <span className="step-num"><IconLock size={14} /></span>
-                  <span className="step-text"><span className="step-kicker">Step {i + 1}</span><span className="step-label">{s.label}</span></span>
-                </span>
-              ) : (
-                <Link href={s.href} className="step-link" onClick={() => setOpen(false)} aria-current={active ? "step" : undefined}>
-                  <span className="step-num">{st === "done" ? <IconCheck size={14} /> : <span>{i + 1}</span>}</span>
-                  <span className="step-text"><span className="step-kicker">Step {i + 1}</span><span className="step-label">{s.label}</span></span>
-                  {s.href === "/decisions" && loaded && unresolved > 0 && <span className="navbadge">{unresolved}</span>}
-                </Link>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      <p className="rail-note">Greenline Landscape Co., LLC · September 2026</p>
-    </nav>
-  );
-}
-
-function Header() {
-  const { setAuditOpen, setAskOpen } = useUI();
-  return (
-    <header className="tophead">
-      <div>
-        <p className="eyebrow">Greenline Landscape Co., LLC</p>
-        <h1 className="head-title">September 2026 close</h1>
-      </div>
-      <div className="head-actions">
-        <button className="btn-ghost small" onClick={() => setAuditOpen(true)}>
-          <IconClock size={15} /> Audit log
-        </button>
-        <button className="btn-primary small" onClick={() => setAskOpen(true)}>
-          <IconChat size={15} /> Ask AI
-        </button>
-      </div>
-    </header>
-  );
-}
-
-function Frame({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+function GlobalSearch() {
   const { computed } = useStore();
-  const { trace, closeTrace, auditOpen, askOpen, setAskOpen } = useUI();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const paper = pathname === "/statements";
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const hits = useMemo<Hit[]>(() => {
+    const t = q.trim().toLowerCase();
+    if (!computed || t.length < 2) return [];
+    const out: Hit[] = [];
+    for (const a of computed.proposal.ajes) {
+      if (a.title.toLowerCase().includes(t) || a.id.includes(t)) {
+        out.push({ kind: "Entry", id: a.id, label: `${a.id} · ${a.title}`, href: `/entries?sel=${a.id}` });
+      }
+    }
+    for (const f of computed.proposal.flags) {
+      if (f.title.toLowerCase().includes(t) || f.id.includes(t)) {
+        out.push({ kind: "Flag", id: f.id, label: f.title, href: `/open-items?sel=${f.id}` });
+      }
+    }
+    for (const r of computed.adjTb) {
+      if (String(r.no).includes(t) || r.name.toLowerCase().includes(t)) {
+        const ref = firstRowForAccount(computed, r.no);
+        out.push({ kind: "Account", id: String(r.no), label: `${r.no} ${r.name}`, href: ref ? `/statements?acct=${r.no}` : "/statements" });
+      }
+    }
+    return out.slice(0, 9);
+  }, [q, computed]);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
   return (
-    <div className="studio">
-      <Rail />
-      <div className="main">
-        <Header />
-        <div className={`workspace${paper ? " paper-mode" : ""}`}>
-          <main className="content">{children}</main>
-          {!paper && <LivePreview computed={computed} />}
-        </div>
-        {!paper && <PreviewBar computed={computed} onExpand={() => setSheetOpen(true)} />}
-      </div>
-      {trace && <TraceDrawer traceKey={trace} onClose={closeTrace} />}
-      {auditOpen && <AuditDrawer />}
-      {askOpen && <ChatDrawer onClose={() => setAskOpen(false)} />}
-      {sheetOpen && computed && (
-        <div className="overlay" onClick={() => setSheetOpen(false)}>
-          <div className="sheet" role="dialog" aria-modal="true" aria-label="Live preview" onClick={(e) => e.stopPropagation()}>
-            <LivePreview computed={computed} />
-            <button className="btn-ghost small sheet-close" onClick={() => setSheetOpen(false)}>Close</button>
-          </div>
+    <div className="gsearch" ref={boxRef}>
+      <IconDoc size={14} />
+      <input
+        type="text"
+        role="combobox"
+        aria-expanded={open && hits.length > 0}
+        aria-label="Global search entries, flags, accounts"
+        placeholder="Search entries, flags, accounts…"
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+        onFocus={() => setOpen(true)}
+      />
+      {open && hits.length > 0 && (
+        <div className="gresults" role="listbox">
+          {hits.map((h) => (
+            <button key={`${h.kind}:${h.id}`} role="option" aria-selected={false} onClick={() => { setOpen(false); setQ(""); router.push(h.href); }}>
+              <span className="g-kind">{h.kind}</span><span>{h.label}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-export function Shell({ children }: { children: React.ReactNode }) {
+// Breadcrumb + title + status + per-page toolbar.
+export function PageHeader({ crumb, title, final, unresolved, toolbar }: { crumb: string; title: string; final: boolean; unresolved: number; toolbar?: React.ReactNode }) {
   return (
-    <UIProvider>
-      <Frame>{children}</Frame>
-    </UIProvider>
+    <>
+      <nav className="crumb" aria-label="Breadcrumb">Close / Sep 2026 / <span>{crumb}</span></nav>
+      <div className="headrow">
+        <h1>{title}</h1>
+        <span className={`lozenge ${final ? "final" : "draft"}`}>{final ? "Final" : `Draft · ${unresolved} open`}</span>
+        <div className="toolbar">{toolbar}</div>
+      </div>
+    </>
   );
 }
+
+function Frame({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { computed } = useStore();
+  const [chatOpen, setChatOpen] = useState(false);
+  const unresolved = computed?.unresolved ?? 0;
+  return (
+    <div>
+      <div className="appbar">
+        <span className="wordmark">Close Desk</span>
+        <GlobalSearch />
+        <div className="entity"><strong className="ename">Greenline Landscape Co., LLC</strong><span className="period-tag">Sep 2026</span></div>
+        <div className="spacer" />
+        <button className="btn-top accent" onClick={() => setChatOpen(true)}><IconChat size={14} /><span className="lbl">Ask AI</span></button>
+        <span className="avatar" title="Accountant">A</span>
+      </div>
+      <nav className="modtabs" aria-label="Modules">
+        {TABS.map((t) => (
+          <Link key={t.href} href={t.href} className={pathname === t.href ? "active" : ""} aria-current={pathname === t.href ? "page" : undefined}>
+            {t.label}
+            {t.badge && computed && unresolved > 0 && <span className="countbadge">{unresolved}</span>}
+          </Link>
+        ))}
+      </nav>
+      <main className="page">{children}</main>
+      <DrillDown />
+      {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}
+    </div>
+  );
+}
+
+export function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <DrillProvider>
+      <Frame>{children}</Frame>
+    </DrillProvider>
+  );
+}
+
+export { SummaryStrip };

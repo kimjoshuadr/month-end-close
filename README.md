@@ -62,7 +62,7 @@ flowchart LR
 
 I worked as the orchestrator in Claude Code, with Muse Spark 1.3 Contributor (via OpenCode) as the executor writing the code. Before any code, I worked through the packet by hand and turned the expected results into tests. The process is documented in [`docs/`](docs/README.md): design specs, the implementation plan, the redesigns, and the QA and security reviews.
 
-**Quality:** 125 unit tests (engine, parsers, state, markdown, security helpers) and 222 Playwright tests that maps each requirement in the brief to a test at desktop, tablet and mobile widths, with a reduced-motion run. Run it against the live site with `E2E_BASE_URL=https://month-end-close.vercel.app npm run e2e`.
+**Quality:** 125 unit tests (engine, parsers, state, markdown, security helpers) and 222 Playwright tests that map each requirement in the brief to a test at desktop, tablet and mobile widths, with a reduced-motion run. Point it at any deployment with `E2E_BASE_URL=<url> npm run e2e` (production rate limits will throttle a full run; use a preview deployment).
 
 ## Run locally
 

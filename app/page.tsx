@@ -20,16 +20,20 @@ function acceptedName(name: string): boolean {
 export default function PacketPage() {
   const { computed, packet, loading, missing, errors, final, loadSample, upload, resetSession } = useStore();
   const [over, setOver] = useState<string | null>(null);
-  const [invalid, setInvalid] = useState<string | null>(null);
+  const [invalid, setInvalid] = useState<{ key: string; msg: string; n: number } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputKey = useRef<string | null>(null);
 
-  const send = async (files: File[]) => {
+  const send = async (files: File[], key: string | null) => {
     if (!files.length) return;
     const bad = files.filter((f) => !acceptedName(f.name));
     if (bad.length > 0) {
-      setInvalid(`"${bad[0].name}" is not a packet file. Drop an .xlsx workbook, supporting .pdf/.txt, or .csv trial balance.`);
+      setInvalid((prev) => ({
+        key: key ?? "workbook",
+        msg: `"${bad[0].name}" is not a recognized packet file. Drop an .xlsx workbook, supporting .pdf/.txt, or .csv trial balance.`,
+        n: (prev?.n ?? 0) + 1,
+      }));
       return;
     }
     setInvalid(null);
@@ -82,7 +86,8 @@ export default function PacketPage() {
               </div>
               <span className={`st ${computed && !isMissing ? "ok" : "unresolved"}`}>{computed && !isMissing ? "Loaded" : "Missing"}</span>
               <div
-                className={`dropmini${over === f.key ? " over" : ""}${invalid && over === f.key ? " invalid" : ""}`}
+                key={invalid?.key === f.key ? `invalid-${invalid.n}` : `ok-${f.key}`}
+                className={`dropmini${over === f.key ? " over" : ""}${invalid?.key === f.key ? " invalid" : ""}`}
                 style={{ minWidth: 220 }}
                 role="button"
                 tabIndex={0}
@@ -100,7 +105,7 @@ export default function PacketPage() {
                 onDrop={(e) => {
                   e.preventDefault();
                   setOver(null);
-                  send([...e.dataTransfer.files]);
+                  send([...e.dataTransfer.files], f.key);
                 }}
               >
                 {loading ? "Parsing…" : over === f.key ? <span className="rel">Release to upload</span> : "Drop file or Browse"}
@@ -108,8 +113,8 @@ export default function PacketPage() {
             </div>
           );
         })}
-        <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf,.txt,.csv" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])]); e.target.value = ""; }} />
-        {invalid && <div style={{ padding: "0 14px 12px" }}><div className="alert error" role="alert" style={{ margin: 0 }}>{invalid}</div></div>}
+        <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.pdf,.txt,.csv" style={{ display: "none" }} onChange={(e) => { send([...(e.target.files ?? [])], inputKey.current); e.target.value = ""; }} />
+        {invalid && <div style={{ padding: "0 14px 12px" }}><div className="alert error" role="alert" key={invalid.n} style={{ margin: 0 }}>{invalid.msg}</div></div>}
         {notice && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{notice}</div></div>}
         {errors.length > 0 && <div style={{ padding: "0 14px 12px" }}><div className="alert error" style={{ margin: 0 }}>{errors.map((e, i) => <div key={i}>{e}</div>)}</div></div>}
       </div>

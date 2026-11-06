@@ -26,6 +26,7 @@ export const IconArrowR = (p: P) => base(p.size ?? 16, p.className, <path d="M4 
 export const IconCaretUp = (p: P) => base(p.size ?? 12, p.className, <path d="M6 14l6-6 6 6" />);
 export const IconCaretDown = (p: P) => base(p.size ?? 12, p.className, <path d="M6 10l6 6 6-6" />);
 export const IconEye = (p: P) => base(p.size ?? 16, p.className, (<><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>));
+export const IconSearch = (p: P) => base(p.size ?? 16, p.className, (<><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></>));
 export const IconChat = (p: P) => base(p.size ?? 16, p.className, <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H9l-5 4z" />);
 export const IconPrint = (p: P) => base(p.size ?? 16, p.className, (<><path d="M7 8V3h10v5" /><rect x="4" y="8" width="16" height="9" rx="2" /><path d="M7 14h10v7H7z" /></>));
 export const IconAlert = (p: P) => base(p.size ?? 16, p.className, (<><path d="M12 3.5L22 20H2z" /><path d="M12 10v4.5m0 2.5v.5" /></>));

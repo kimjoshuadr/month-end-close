@@ -33,10 +33,11 @@ function useCountUp(value: number, ms = 350): number {
 
 function Cell({ label, value }: { label: string; value: number }) {
   const display = useCountUp(value);
+  const text = display < 0 ? `($${fmtMoney(-display)})` : `$${fmtMoney(display)}`;
   return (
     <div className="kpi">
       <div className="k">{label}</div>
-      <div className="v flash" key={Math.round(value * 100)}>${fmtMoney(display)}</div>
+      <div className="v flash" key={Math.round(value * 100)}>{text}</div>
     </div>
   );
 }

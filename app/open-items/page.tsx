@@ -9,8 +9,8 @@ import { PageHeader, SummaryStrip } from "../../components/Shell";
 import { fmtMoney } from "../../components/format";
 
 function stakeOf(flagId: string, computed: NonNullable<ReturnType<typeof useStore>["computed"]>): number | null {
-  const a = computed.proposal.ajes.find((x) => x.flagId === flagId && x.status === "booked");
-  if (!a) return flagId === "owner-transfer" ? 5000 : null;
+  const a = computed.proposal.ajes.find((x) => x.flagId === flagId);
+  if (!a) return null;
   const line = a.lines.find((l) => l.debit > 0 || l.credit > 0);
   return line ? Math.max(line.debit, line.credit) : null;
 }
@@ -104,7 +104,7 @@ function Detail({ flag, done }: { flag: Flag; done: number }) {
                     checked={effective === o.id}
                     onChange={() => (flag.kind === "info" ? setAnswer(flag.id, { ...answers[flag.id], ack: true }) : setPick(o.id))}
                   />
-                  <span>{o.label}{o.id === flag.defaultOption ? " (default)" : ""}</span>
+                  <span>{o.label}{o.id === flag.defaultOption && !/default/i.test(o.label) ? " (default)" : ""}</span>
                   <span className="ni">NI ${fmtMoney(niFor[o.id] ?? 0)}</span>
                 </label>
               ))}

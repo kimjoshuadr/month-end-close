@@ -8,7 +8,7 @@ import { useStore } from "../state/store";
 import { ChatDrawer } from "./ChatDrawer";
 import { DrillDown } from "./DrillDown";
 import { DrillProvider } from "./erp-ui";
-import { IconChat, IconDoc } from "./icons";
+import { IconChat, IconSearch } from "./icons";
 import { SummaryStrip } from "./SummaryStrip";
 
 const TABS = [
@@ -64,7 +64,7 @@ function GlobalSearch() {
 
   return (
     <div className="gsearch" ref={boxRef}>
-      <IconDoc size={14} />
+      <IconSearch size={14} />
       <input
         type="text"
         role="combobox"

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useReducer } from "react";
 import { compute } from "../lib/engine";
-import type { Answer, Computed, Packet } from "../lib/types";
+import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
 import { createInitial, reducer, type AuditEntry } from "./reducer";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
@@ -10,6 +10,8 @@ export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
 type Store = {
   computed: Computed | null;
   packet: Packet | null;
+  answers: Answers;
+  overrides: Overrides;
   loading: boolean;
   missing: string[];
   errors: string[];
@@ -71,7 +73,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(() => {
     const computed: Computed | null = s.packet ? compute(s.packet, s.answers, s.overrides) : null;
-    return { computed, packet: s.packet, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, toggleFinal };
+    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, toggleFinal };
   }, [s, loadSample, upload, setAnswer, setOverride, toggleFinal]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

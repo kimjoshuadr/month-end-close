@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 import { compute } from "../lib/engine";
 import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types";
-import { SESSION_KEY, createInitial, deserializeState, reducer, selectCanUndo, serializeState, type AuditEntry } from "./reducer";
+import { SESSION_KEY, createInitial, deserializeState, reducer, selectCanUndo, serializeState, type AuditEntry, type Signoff } from "./reducer";
 import { ajeNo } from "../components/format";
 
 export type UploadResult = { ok: boolean; missing: string[]; errors: string[] };
@@ -14,6 +14,8 @@ type Store = {
   answers: Answers;
   overrides: Overrides;
   notes: Record<string, string>;
+  fluxNotes: Record<string, string>;
+  signoff: Signoff | null;
   loading: boolean;
   missing: string[];
   errors: string[];
@@ -24,7 +26,10 @@ type Store = {
   setAnswer: (id: string, a: Answer) => void;
   setOverride: (key: string, n: number) => void;
   setNote: (report: string, text: string, label: string) => void;
+  setFluxNote: (line: string, text: string) => void;
   toggleFinal: () => void;
+  signOff: (preparedBy: string, reviewedBy: string) => void;
+  reopen: () => void;
   resetSession: () => void;
   undo: () => void;
   canUndo: boolean;
@@ -83,6 +88,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "note", report, text, msg: `Reviewer note saved for ${label}` });
   }, []);
 
+  const setFluxNote = useCallback((line: string, text: string) => {
+    dispatch({ type: "flux-note", line, text, msg: `Flux explanation saved for ${line}` });
+  }, []);
+
+  const signOff = useCallback((preparedBy: string, reviewedBy: string) => {
+    dispatch({ type: "signoff", preparedBy, reviewedBy, at: new Date().toISOString(), msg: `Marked as final by ${preparedBy}, reviewed by ${reviewedBy}` });
+  }, []);
+
+  const reopen = useCallback(() => dispatch({ type: "reopen" }), []);
+
   const resetSession = useCallback(() => {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -117,8 +132,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(() => {
     const computed: Computed | null = s.packet ? compute(s.packet, s.answers, s.overrides) : null;
-    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession, undo, canUndo: selectCanUndo(s) };
-  }, [s, loadSample, upload, setAnswer, setOverride, setNote, toggleFinal, resetSession, undo]);
+    return { computed, packet: s.packet, answers: s.answers, overrides: s.overrides, notes: s.notes, fluxNotes: s.fluxNotes, signoff: s.signoff, loading: s.loading, missing: s.missing, errors: s.errors, final: s.final, audit: s.audit, loadSample, upload, setAnswer, setOverride, setNote, setFluxNote, toggleFinal, signOff, reopen, resetSession, undo, canUndo: selectCanUndo(s) };
+  }, [s, loadSample, upload, setAnswer, setOverride, setNote, setFluxNote, toggleFinal, signOff, reopen, resetSession, undo]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../state/store";
 import { ChatDrawer } from "./ChatDrawer";
 import { TopBar } from "./TopBar";
@@ -19,25 +19,35 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { computed } = useStore();
   const [askOpen, setAskOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     <div className="shell">
-      <nav className="sidenav" aria-label="Primary">
+      <nav className={`sidenav${menuOpen ? " open" : ""}`} aria-label="Primary">
         <div className="brand">
           <p className="eyebrow" style={{ color: "#9fb3cc", margin: 0 }}>
             Month-end close
           </p>
           <p className="wordmark">Close Desk</p>
         </div>
-        {NAV.map((n) => (
-          <Link key={n.href} href={n.href} className={`navlink${pathname === n.href ? " active" : ""}`}>
-            <span>{n.label}</span>
-            {n.badge && computed && computed.unresolved > 0 && <span className="navbadge">{computed.unresolved}</span>}
-          </Link>
-        ))}
-        <span style={{ flex: 1 }} />
-        <button className="navlink" style={{ width: "100%", background: "var(--blue)", color: "#fff", border: "none", cursor: "pointer", font: "inherit" }} onClick={() => setAskOpen(true)}>
-          <span>Ask AI</span>
+        <button className="menubtn" aria-expanded={menuOpen} aria-controls="navlinks" onClick={() => setMenuOpen((o) => !o)}>
+          {menuOpen ? "Close" : "Menu"}
         </button>
+        <div className="navlinks" id="navlinks">
+          {NAV.map((n) => (
+            <Link key={n.href} href={n.href} className={`navlink${pathname === n.href ? " active" : ""}`}>
+              <span>{n.label}</span>
+              {n.badge && computed && computed.unresolved > 0 && <span className="navbadge">{computed.unresolved}</span>}
+            </Link>
+          ))}
+          <button className="navlink askbtn" onClick={() => { setMenuOpen(false); setAskOpen(true); }}>
+            <span>Ask AI</span>
+          </button>
+        </div>
       </nav>
       <div className="main">
         <div className="topbar">

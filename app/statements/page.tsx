@@ -79,7 +79,7 @@ export default function StatementsPage() {
           title="Statement of Cash Flows"
           period="For the Month and Nine Months Ended September 30, 2026"
           table={computed.statements.cf}
-          footnote="Fictional example created for a hiring exercise. Owner Contributions / Owner Loan Proceeds lines are a deliberate extension of the August format."
+          footnote="Fictional example created for a hiring exercise. Amounts rounded to whole dollars. Owner Contributions / Owner Loan Proceeds lines are a deliberate extension of the August format."
         />
       )}
       <p className="small muted noprint" style={{ marginTop: 10 }}>

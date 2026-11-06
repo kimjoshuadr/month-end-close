@@ -1,18 +1,18 @@
 "use client";
 
 import type { BsTable, CfTable, IsTable } from "../lib/types";
-import { fmtMoney } from "./format";
+import { fmtWhole } from "./format";
 
 type Table = IsTable | BsTable | CfTable;
 
-function cell(v: number, header: string, money: boolean): string {
-  if (header.startsWith("%")) return `${v.toFixed(1)}%`;
-  if (!money) return fmtMoney(v);
-  return `$ ${fmtMoney(v)}`;
+function cell(v: number, header: string, money: boolean): { text: string; pct: boolean } {
+  if (header.startsWith("%")) return { text: `${v.toFixed(1)}%`, pct: true };
+  if (!money) return { text: fmtWhole(v), pct: false };
+  return { text: `$ ${fmtWhole(v)}`, pct: false };
 }
 
-// August-PDF-style statement table: centered header, % of Revenue columns,
-// parentheses negatives, $ on subtotal/total rows, fictional footnote.
+// August-PDF-style statement table: centered header, % of Revenue columns
+// (hidden under 600px via .pctcol), whole dollars, $ on subtotal/total rows.
 export function StatementTable({ title, period, table, footnote }: { title: string; period: string; table: Table; footnote?: string }) {
   return (
     <div className="stmt">
@@ -27,7 +27,7 @@ export function StatementTable({ title, period, table, footnote }: { title: stri
             <tr>
               <th style={{ background: "#fff", color: "var(--navy)" }}></th>
               {table.headers.map((h, i) => (
-                <th key={i} className="num" style={{ background: "#fff", color: "var(--navy)" }}>{h}</th>
+                <th key={i} className={`num${h.startsWith("%") ? " pctcol" : ""}`} style={{ background: "#fff", color: "var(--navy)" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -38,16 +38,17 @@ export function StatementTable({ title, period, table, footnote }: { title: stri
               return (
                 <tr key={i} className={r.kind === "line" ? undefined : r.kind}>
                   <td>{r.label}</td>
-                  {r.values.map((v, j) => (
-                    <td key={j} className="num">{j === 0 && moneyRow ? cell(v, table.headers[j], true) : cell(v, table.headers[j], false)}</td>
-                  ))}
+                  {r.values.map((v, j) => {
+                    const c = cell(v, table.headers[j], j === 0 && moneyRow);
+                    return <td key={j} className={`num${c.pct ? " pctcol" : ""}`}>{c.text}</td>;
+                  })}
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <p className="small muted" style={{ marginTop: 12, fontStyle: "italic" }}>{footnote ?? "Fictional example created for a hiring exercise."}</p>
+      <p className="small muted" style={{ marginTop: 12, fontStyle: "italic" }}>{footnote ?? "Fictional example created for a hiring exercise. Amounts rounded to whole dollars."}</p>
     </div>
   );
 }

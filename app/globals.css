@@ -1,0 +1,91 @@
+:root {
+  --navy: #0b2240;
+  --blue: #0099ce;
+  --orange: #ff8a2c;
+  --text: #3a3a3a;
+  --text-muted: #4b4f58;
+  --grey-bg: #f5f5f5;
+  --grey-border: #e5e5e5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--grey-bg);
+}
+
+h1,
+h2,
+h3 {
+  font-family: Poppins, Inter, sans-serif;
+  color: var(--navy);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidenav {
+  width: 240px;
+  background: var(--navy);
+  color: #fff;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.sidenav a {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.sidenav a:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--grey-border);
+  padding: 12px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+}
+
+.topmenu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .shell {
+    flex-direction: column;
+  }
+  .sidenav {
+    width: 100%;
+  }
+  .topmenu {
+    display: block;
+  }
+}

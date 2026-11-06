@@ -25,4 +25,4 @@ export type TableRow = { label: string; values: number[]; kind: 'line' | 'subtot
 export type IsTable = { headers: string[]; rows: TableRow[] };
 export type BsTable = { headers: string[]; rows: TableRow[] };
 export type CfTable = { headers: string[]; rows: TableRow[] };
-export type Statements = { isMonth: IsTable; isYtd: IsTable; bs: BsTable; cf: CfTable };
+export type Statements = { isMonth: IsTable; isYtd: IsTable; bs: BsTable; cf: CfTable; ttm: IsTable };

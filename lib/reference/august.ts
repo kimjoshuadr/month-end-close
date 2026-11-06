@@ -58,6 +58,23 @@ export const AUG = {
     ytd2025: fig({ landscape: 434780, maintenance: 179297, wages: 145920, materials: 89260, sub: 47681, rent: 40000, fuel: 28199, utilities: 24788, repairs: 15922, payrollTaxes: 14592, insurance: 13200, software: 7200, prof: 6600, bankFees: 2259, dep: 9600, interest: 10136 }),
   },
   sep2025: fig({ landscape: 56312, maintenance: 22163, wages: 18479, materials: 11291, sub: 6360, rent: 5000, fuel: 3624, utilities: 3130, repairs: 2445, payrollTaxes: 1848, insurance: 1650, software: 900, prof: 750, bankFees: 311, dep: 2400, interest: 1204 }),
+  // TTM page columns Oct-25 through Aug-26, transcribed from the August PDF.
+  ttm: {
+    months: ["Oct-25", "Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26", "Apr-26", "May-26", "Jun-26", "Jul-26", "Aug-26"],
+    figures: [
+      fig({ landscape: 57627, maintenance: 22698, wages: 18638, materials: 11706, sub: 6204, rent: 5000, fuel: 3718, utilities: 2924, repairs: 1233, payrollTaxes: 1864, insurance: 1650, software: 900, prof: 750, bankFees: 299, dep: 2400, interest: 1190 }),
+      fig({ landscape: 51853, maintenance: 22897, wages: 17937, materials: 10707, sub: 5778, rent: 5000, fuel: 3363, utilities: 3193, repairs: 1995, payrollTaxes: 1794, insurance: 1800, software: 900, prof: 750, bankFees: 268, dep: 2400, interest: 1176 }),
+      fig({ landscape: 46450, maintenance: 22369, wages: 17281, materials: 9404, sub: 4980, rent: 5000, fuel: 2938, utilities: 2998, repairs: 1422, payrollTaxes: 1728, insurance: 1800, software: 900, prof: 750, bankFees: 301, dep: 2400, interest: 1162 }),
+      fig({ landscape: 49210, maintenance: 23886, wages: 17616, materials: 10198, sub: 5273, rent: 5200, fuel: 3104, utilities: 3139, repairs: 2491, payrollTaxes: 1762, insurance: 1800, software: 1100, prof: 750, bankFees: 321, dep: 2400, interest: 1148 }),
+      fig({ landscape: 53021, maintenance: 24413, wages: 18079, materials: 10801, sub: 5497, rent: 5200, fuel: 3540, utilities: 3072, repairs: 1797, payrollTaxes: 1808, insurance: 1800, software: 1100, prof: 750, bankFees: 274, dep: 2400, interest: 1134 }),
+      fig({ landscape: 57951, maintenance: 24899, wages: 18678, materials: 11810, sub: 6450, rent: 5200, fuel: 3809, utilities: 3143, repairs: 1902, payrollTaxes: 1868, insurance: 1800, software: 1100, prof: 1350, bankFees: 309, dep: 2400, interest: 1120 }),
+      fig({ landscape: 64107, maintenance: 24032, wages: 19425, materials: 12862, sub: 6744, rent: 5200, fuel: 4055, utilities: 3044, repairs: 1578, payrollTaxes: 1942, insurance: 1800, software: 1100, prof: 750, bankFees: 278, dep: 2400, interest: 1106 }),
+      fig({ landscape: 63897, maintenance: 24017, wages: 19400, materials: 13425, sub: 7048, rent: 5200, fuel: 4051, utilities: 3129, repairs: 1483, payrollTaxes: 1940, insurance: 1800, software: 1100, prof: 750, bankFees: 274, dep: 2400, interest: 1092 }),
+      fig({ landscape: 66399, maintenance: 24061, wages: 19703, materials: 13712, sub: 7299, rent: 5200, fuel: 4323, utilities: 3175, repairs: 2289, payrollTaxes: 1970, insurance: 1800, software: 1100, prof: 750, bankFees: 324, dep: 2400, interest: 1078 }),
+      fig({ landscape: 61616, maintenance: 24485, wages: 19123, materials: 12341, sub: 6816, rent: 5200, fuel: 3931, utilities: 2916, repairs: 1421, payrollTaxes: 1912, insurance: 1800, software: 1100, prof: 750, bankFees: 266, dep: 2400, interest: 1064 }),
+      fig({ landscape: 63900, maintenance: 24500, wages: 19400, materials: 13100, sub: 6900, rent: 5200, fuel: 4150, utilities: 3050, repairs: 1980, payrollTaxes: 1940, insurance: 1800, software: 1100, prof: 750, bankFees: 295, dep: 2400, interest: 1050 }),
+    ],
+  },
   bs: {
     cash: 59900, ar: 36900, prepaid: 3600, currentAssets: 100400,
     fixedNet: 105600, totalAssets: 206000, ap: 25690, currentLiab: 25690,

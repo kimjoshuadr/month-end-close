@@ -183,5 +183,43 @@ export function buildStatements(packet: Packet, ajes: Aje[]): Statements {
     ],
   };
 
-  return { isMonth, isYtd, bs, cf };
+  return { isMonth, isYtd, bs, cf, ttm: buildTtm(sept) };
+}
+
+// Trailing twelve months: Oct-25..Aug-26 from the August TTM page,
+// Sep-26 from the adjusted September figures, plus Total and % columns.
+export function buildTtm(sept: IsFigures): Statements["ttm"] {
+  const months = [...AUG.ttm.months, "Sep-26"];
+  const cols = [...AUG.ttm.figures, sept];
+  const headers = [...months, "Total", "% of Revenue"];
+  const totalOf = (pick: (f: IsFigures) => number) => r2(cols.reduce((s, f) => s + pick(f), 0));
+  const salesTotal = totalOf((f) => r2(f["Landscape Services Revenue"] + f["Maintenance Contract Revenue"]));
+  const pct = (v: number) => (salesTotal === 0 ? 0 : r2((v / salesTotal) * 1000) / 10);
+  const rows: Statements["ttm"]["rows"] = [];
+  const line = (label: IsLine, kind: "line" | "subtotal" | "total" | "header" = "line") => {
+    const vals = cols.map((f) => f[label]);
+    const total = r2(vals.reduce((s, v) => s + v, 0));
+    rows.push({ label, values: [...vals, total, pct(total)], kind });
+  };
+  const calc = (label: string, pick: (f: IsFigures) => number, kind: "line" | "subtotal" | "total" | "header" = "line") => {
+    const vals = cols.map((f) => r2(pick(f)));
+    const total = r2(vals.reduce((s, v) => s + v, 0));
+    rows.push({ label, values: [...vals, total, pct(total)], kind });
+  };
+  const sales = (f: IsFigures) => r2(f["Landscape Services Revenue"] + f["Maintenance Contract Revenue"]);
+  const opex = (f: IsFigures) => r2(OPEX.reduce((s, l) => s + f[l], 0));
+  rows.push({ label: "Sales", values: [], kind: "header" });
+  line("Landscape Services Revenue");
+  line("Maintenance Contract Revenue");
+  calc("Total Sales", sales, "subtotal");
+  rows.push({ label: "Operating Expenses", values: [], kind: "header" });
+  for (const l of OPEX) line(l);
+  calc("Total Operating Expenses", opex, "subtotal");
+  calc("Net Operating Income", (f) => r2(sales(f) - opex(f)), "total");
+  rows.push({ label: "Other Expenses", values: [], kind: "header" });
+  line("Depreciation");
+  line("Interest Expense");
+  calc("Total Other Expenses", (f) => r2(f.Depreciation + f["Interest Expense"]), "subtotal");
+  calc("Net Income/(Loss)", netOf, "total");
+  return { headers, rows };
 }

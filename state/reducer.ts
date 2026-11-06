@@ -3,6 +3,17 @@ import type { Answer, Answers, Computed, Overrides, Packet } from "../lib/types"
 
 export type AuditEntry = { ts: string; msg: string };
 
+// Restorable slice for undo: everything a mutating action can change.
+export type Snapshot = {
+  label: string;
+  answers: Answers;
+  overrides: Overrides;
+  notes: Record<string, string>;
+  final: boolean;
+};
+
+export const HISTORY_LIMIT = 20;
+
 export type StoreState = {
   packet: Packet | null;
   answers: Answers;
@@ -13,6 +24,7 @@ export type StoreState = {
   loading: boolean;
   missing: string[];
   errors: string[];
+  past: Snapshot[];
 };
 
 export type StoreAction =
@@ -25,39 +37,56 @@ export type StoreAction =
   | { type: "set-loading"; loading: boolean }
   | { type: "set-upload"; missing: string[]; errors: string[] }
   | { type: "rehydrate"; state: StoreState }
+  | { type: "undo" }
   | { type: "reset" };
 
 export function createInitial(): StoreState {
-  return { packet: null, answers: {}, overrides: {}, notes: {}, audit: [], final: false, loading: false, missing: [], errors: [] };
+  return { packet: null, answers: {}, overrides: {}, notes: {}, audit: [], final: false, loading: false, missing: [], errors: [], past: [] };
 }
 
 function stamp(msg: string): AuditEntry {
   return { ts: new Date().toISOString(), msg };
 }
 
+function snap(s: StoreState, label: string): Snapshot {
+  return { label, answers: s.answers, overrides: s.overrides, notes: s.notes, final: s.final };
+}
+
+// The pre-change snapshot goes on the stack; oldest drops past the limit.
+function pushPast(s: StoreState, label: string): Snapshot[] {
+  return [...s.past, snap(s, label)].slice(-HISTORY_LIMIT);
+}
+
 // Pure state transitions; the provider adds persistence-free React wiring.
 export function reducer(s: StoreState, a: StoreAction): StoreState {
   switch (a.type) {
     case "packet-loaded":
-      return { ...s, packet: a.packet, answers: {}, overrides: {}, notes: {}, final: false, loading: false, missing: [], errors: [], audit: [...s.audit, stamp(a.msg)] };
+      return { ...s, packet: a.packet, answers: {}, overrides: {}, notes: {}, final: false, loading: false, missing: [], errors: [], past: [], audit: [...s.audit, stamp(a.msg)] };
     case "answer":
-      return { ...s, answers: { ...s.answers, [a.id]: a.answer }, audit: [...s.audit, stamp(a.msg)] };
+      return { ...s, answers: { ...s.answers, [a.id]: a.answer }, past: pushPast(s, a.msg), audit: [...s.audit, stamp(a.msg)] };
     case "override": {
       const v = Number(a.value);
-      return { ...s, overrides: { ...s.overrides, [a.key]: Number.isFinite(v) ? v : 0 }, audit: [...s.audit, stamp(a.msg)] };
+      return { ...s, overrides: { ...s.overrides, [a.key]: Number.isFinite(v) ? v : 0 }, past: pushPast(s, a.msg), audit: [...s.audit, stamp(a.msg)] };
     }
     case "log":
       return { ...s, audit: [...s.audit, stamp(a.msg)] };
-    case "toggle-final":
-      return { ...s, final: !s.final, audit: [...s.audit, stamp(s.final ? "Reopened as draft" : "Marked as final (local state only)")] };
+    case "toggle-final": {
+      const msg = s.final ? "Reopened as draft" : "Marked as final (local state only)";
+      return { ...s, final: !s.final, past: pushPast(s, msg), audit: [...s.audit, stamp(msg)] };
+    }
     case "note":
-      return { ...s, notes: { ...s.notes, [a.report]: a.text }, audit: [...s.audit, stamp(a.msg)] };
+      return { ...s, notes: { ...s.notes, [a.report]: a.text }, past: pushPast(s, a.msg), audit: [...s.audit, stamp(a.msg)] };
     case "set-loading":
       return { ...s, loading: a.loading };
     case "set-upload":
       return { ...s, missing: a.missing, errors: a.errors, loading: false };
     case "rehydrate":
-      return { ...a.state, loading: false, missing: [], errors: [] };
+      return { ...a.state, loading: false, missing: [], errors: [], past: [] };
+    case "undo": {
+      const prev = s.past[s.past.length - 1];
+      if (!prev) return s;
+      return { ...s, answers: prev.answers, overrides: prev.overrides, notes: prev.notes, final: prev.final, past: s.past.slice(0, -1), audit: [...s.audit, stamp(`Undo: ${prev.label}`)] };
+    }
     case "reset":
       return createInitial();
     default:
@@ -67,6 +96,10 @@ export function reducer(s: StoreState, a: StoreAction): StoreState {
 
 export function selectComputed(s: StoreState): Computed | null {
   return s.packet ? compute(s.packet, s.answers, s.overrides) : null;
+}
+
+export function selectCanUndo(s: StoreState): boolean {
+  return s.past.length > 0;
 }
 
 export const SESSION_KEY = "closedesk.session.v1";
@@ -105,7 +138,7 @@ export function deserializeState(raw: string | null | undefined): StoreState | n
         if (typeof v === "string") notes[k] = v;
       }
     }
-    return { packet: o.packet as Packet, answers, overrides, notes, audit, final: o.final === true, loading: false, missing: [], errors: [] };
+    return { packet: o.packet as Packet, answers, overrides, notes, audit, final: o.final === true, loading: false, missing: [], errors: [], past: [] };
   } catch {
     return null;
   }

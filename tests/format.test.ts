@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { fmtWhole } from "../components/format";
+import { deltaWords, fmtDelta, fmtWhole } from "../components/format";
+
+describe("fmtDelta", () => {
+  it("signs deltas with U+2212 minus and + plus", () => {
+    expect(fmtDelta(-5000)).toBe("−5,000.00");
+    expect(fmtDelta(1017.5)).toBe("+1,017.50");
+    expect(fmtDelta(0)).toBe("0.00");
+  });
+  it("describes the direction in words for live regions", () => {
+    expect(deltaWords(-5000)).toBe("down 5,000.00");
+    expect(deltaWords(1017.5)).toBe("up 1,017.50");
+    expect(deltaWords(0)).toBe("unchanged");
+  });
+});
 
 describe("fmtWhole", () => {
   it("shows whole dollars without cents", () => {

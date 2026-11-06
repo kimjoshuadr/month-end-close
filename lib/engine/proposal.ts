@@ -87,6 +87,7 @@ export function buildProposal(p: Packet, answers: Answers): Proposal {
   const taxes = r2(wages * p.payroll.taxRate);
   ajes.push({
     id: "payroll-accrual", title: `Accrued payroll Sep ${split.inMonth} of ${split.days} working days`, status: "booked", assumed: false,
+    reverseOn: "2026-10-01",
     lines: [
       { acct: 6000, debit: wages, credit: 0, source: `Payroll register next period ${np.start} to ${np.end}, paid ${np.payDate}` },
       { acct: 6010, debit: taxes, credit: 0, source: `Payroll register tax rate ${p.payroll.taxRate * 100}%` },
@@ -98,6 +99,7 @@ export function buildProposal(p: Packet, answers: Answers): Proposal {
   if (lakeside) {
     ajes.push({
       id: "electric", title: "Lakeside Electric September bill", status: "booked", assumed: false,
+      reverseOn: "2026-10-01",
       lines: [
         { acct: 6110, debit: lakeside.total, credit: 0, source: `Lakeside invoice ${lakeside.date}, service ${lakeside.periodNote}` },
         { acct: 2000, debit: 0, credit: lakeside.total, source: `Lakeside invoice ${lakeside.date}, service ${lakeside.periodNote}` },
@@ -142,6 +144,7 @@ export function buildProposal(p: Packet, answers: Answers): Proposal {
   ajes.push({
     id: "northline", title: "Northline October rental", status: northOpt === "accrue" ? "booked" : "not_booked",
     assumed: false, flagId: "northline",
+    ...(northOpt === "accrue" ? { reverseOn: "2026-10-01" } : {}),
     lines: [
       { acct: 6100, debit: north?.total ?? 0, credit: 0, source: `${north?.number ?? ""} rental ${north?.periodNote ?? ""} (mapped to 6100 Rent, closest TB account)` },
       { acct: 2000, debit: 0, credit: north?.total ?? 0, source: `${north?.number ?? ""} rental ${north?.periodNote ?? ""} (mapped to 6100 Rent, closest TB account)` },

@@ -11,7 +11,7 @@ export type Packet = {
   email: { from: string; date: string; body: string };
 };
 export type AjeLine = { acct: number; debit: number; credit: number; source: string };
-export type Aje = { id: string; title: string; status: 'booked' | 'not_booked'; assumed: boolean; flagId?: string; lines: AjeLine[] };
+export type Aje = { id: string; title: string; status: 'booked' | 'not_booked'; assumed: boolean; flagId?: string; reverseOn?: string; lines: AjeLine[] };
 export type FlagOption = { id: string; label: string };
 export type Flag = { id: string; title: string; evidence: string; kind: 'decision' | 'info'; options: FlagOption[]; defaultOption: string };
 export type Answer = { option?: string; amount?: number; ack?: boolean };
